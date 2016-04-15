@@ -1,0 +1,21 @@
+comment "//";
+comment "/*" "*/";
+
+comment "#"; --- what about escaped newlines / multi-line defines?
+
+Program ::= [Def];
+terminator Def "";
+
+FunctionDef.Def ::= "inline"? Type Id "(" [Argument] ")" Block;
+seperator Argument ",";
+Argument ::= Type Id;
+
+Block ::= "{" [Statement] "}";
+terminator Statement ";";
+
+TypedefStat.Statement ::= "typedef" ...;
+ClassStat.Statement ::= ...;
+
+
+VariableDecl.Statement ::= Type Id;
+VariableInitDecl.Statement ::= Type Id "=" RValue;
