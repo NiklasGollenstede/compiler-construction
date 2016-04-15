@@ -1,21 +1,92 @@
 comment "//";
 comment "/*" "*/";
+comment "#";
 
-comment "#"; --- what about escaped newlines / multi-line defines?
-
-Program ::= [Def];
+ProgramValue.Program ::= [Def];
 terminator Def "";
 
-FunctionDef.Def ::= "inline"? Type Id "(" [Argument] ")" Block;
-seperator Argument ",";
-Argument ::= Type Id;
+TypedefValue.Typedef ::= "typedef" Type Ident;
 
-Block ::= "{" [Statement] "}";
-terminator Statement ";";
+TypedefDef.Def ::= Typedef ";";
+UsingTypeDef.Def ::= "using" Type ";";
+UsingNamespaceDef.Def ::= "using" "namespace" NamespaceName ";";
 
-TypedefStat.Statement ::= "typedef" ...;
-ClassStat.Statement ::= ...;
+FunctionDef.Def ::= Type Id "(" [ArgumentDecl] ")" Block;
+InlineFunctionDef.Def ::= "inline" Type Id "(" [ArgumentDecl] ")" Block;
+separator ArgumentDecl ",";
+separator ArgumentValue ",";
+ArgumentValueValue.ArgumentValue ::= RValue;
+ArgumentDeclValue.ArgumentDecl ::= VarDecl;
+
+DefaultVarDecl.VarDecl ::= Type Ident;
+DefaultVarInit.VarInit ::= Ident;
+InitVarInit.VarInit ::= Ident "=" RValue;
+separator VarInit ",";
+
+BlockValue.Block ::= "{" [SuperStatement] "}";
+terminator SuperStatement "";
+StatementSS.SuperStatement ::= Statement ";";
+FlowControlSS.SuperStatement ::= FlowControl;
+BlockSS.SuperStatement ::= Block;
+
+IfStat.FlowControl ::= "if" "(" RValue ")" SuperStatement;
+WhileStat.FlowControl ::= "while" "(" RValue ")" SuperStatement;
+
+RValStat.Statement ::= RValue;
+VarDeclStat.Statement ::= Type [VarInit];
+AssignmentStat.Statement ::= LValue "=" RValue;
+ReturnStat.Statement ::= "return" RValue;
+ThrowStat.Statement ::= "throw" RValue;
+TypedefStat.Statement ::= Typedef;
+
+VariableLVal.LValue ::= Id;
+MemberLVal.LValue ::= Member;
+
+EmbracedRVal.RValue ::= "(" RValue ")";
+ConstantRVal.RValue ::= Constant;
+LValueRVal.RValue ::= LValue;
+BinaryOperationRVal.RValue ::= RValue Operator RValue;
+TrinaryOperationRVal.RValue ::= RValue "?" RValue ":" RValue;
+CallRVal.RValue ::= RValue "(" [ArgumentValue] ")";
+
+DotMem.Member ::= RValue "." Ident;
+ArrowMem.Member ::= RValue "->" Ident;
+ArrayMem.Member ::= RValue "[" RValue "]";
 
 
-VariableDecl.Statement ::= Type Id;
-VariableInitDecl.Statement ::= Type Id "=" RValue;
+CommaOp.Operator ::= ",";
+AddOp.Operator ::= "+";
+SubOp.Operator ::= "-";
+MulOp.Operator ::= "*";
+DivOp.Operator ::= "/";
+ModOp.Operator ::= "%";
+LShiftOp.Operator ::= "<<";
+RShiftArithmeticOp.Operator ::= ">>";
+RShiftLogicalOp.Operator ::= ">>>";
+EqOp.Operator ::= "==";
+And1Op.Operator ::= "&";
+AndOp.Operator ::= "&&";
+Or1Op.Operator ::= "|";
+OrOp.Operator ::= "||";
+
+SimpleType.Type ::= Ident;
+ScopedType.Type ::= Type "::" Ident;
+TemplatedType.Type ::= Ident "<" [ArgumentValue] ">";
+ScopedTemplatedType.Type ::= Type "::" Ident "<" [ArgumentValue] ">";
+ReferenceType.Type ::= Type "&";
+PointerType.Type ::= Type "*";
+ConstType.Type ::= "const" Type;
+
+SimpleId.Id ::= Ident;
+ScopedId.Id ::= NamespaceName "::" Ident;
+SimpleNamespaceName.NamespaceName ::= Ident;
+NestedNamespaceName.NamespaceName ::= NamespaceName "::" Ident;
+
+
+IntConst.Constant ::= Integer;
+StringConst.Constant ::= [String];
+separator String "";
+DoubleConst.Constant ::= Double;
+CharConst.Constant ::= Char;
+TrueConst.Constant ::= "true";
+FalseConst.Constant ::= "false";
