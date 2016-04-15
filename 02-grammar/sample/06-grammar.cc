@@ -58,7 +58,8 @@ vector<string> gen_sentence(const Grammar& g)
 
 bool bracketed(const string& s)
 {
-	return s.size() > 1 && s[0] == '<' && s[s.size() - 1] == '>';
+	// return s.size() > 1 && s[0] == '<' && s[s.size() - 1] == '>';
+	return s.size() >= 1 && s[0] == '<' && s[s.size() - 1] == '>';
 }
 
 void
@@ -114,7 +115,8 @@ int main()
 // return a random integer in the range `[0,' `n)'
 int nrand(int n)
 {
-	if (n <= 0 || n > RAND_MAX)
+	// if (n <= 0 || n > RAND_MAX)
+	if (n <= 0 || n >= RAND_MAX)
 		throw domain_error("Argument to nrand is out of range");
 
 	const int bucket_size = RAND_MAX / n;

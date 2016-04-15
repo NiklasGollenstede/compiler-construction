@@ -2,72 +2,95 @@ comment "//";
 comment "/*" "*/";
 comment "#";
 
-ProgramValue.Program ::= [Def];
-terminator Def "";
+ProgramValue.Program ::= [Definition];
+terminator Definition "";
 
 TypedefValue.Typedef ::= "typedef" Type Ident;
 
-TypedefDef.Def ::= Typedef ";";
-UsingTypeDef.Def ::= "using" Type ";";
-UsingNamespaceDef.Def ::= "using" "namespace" NamespaceName ";";
+TypedefDef.Definition ::= Typedef ";";
+UsingTypeDef.Definition ::= "using" Type ";";
+UsingNamespaceDef.Definition ::= "using" "namespace" NamespaceName ";";
 
-FunctionDef.Def ::= Type Id "(" [ArgumentDecl] ")" Block;
-InlineFunctionDef.Def ::= "inline" Type Id "(" [ArgumentDecl] ")" Block;
+FunctionDeclValue.FunctionDecl ::= Type Id "(" [ArgumentDecl] ")";
+FunctionDeclDef.Definition ::= FunctionDecl ";";
+FunctionDef.Definition ::= FunctionDecl Block;
+InlineFunctionDef.Definition ::= "inline" FunctionDecl Block;
 separator ArgumentDecl ",";
 separator ArgumentValue ",";
 ArgumentValueValue.ArgumentValue ::= RValue;
-ArgumentDeclValue.ArgumentDecl ::= VarDecl;
+VariableArgumentDecl.ArgumentDecl ::= VarDecl;
+TypeArgumentDecl.ArgumentDecl ::= Type;
 
 DefaultVarDecl.VarDecl ::= Type Ident;
 DefaultVarInit.VarInit ::= Ident;
 InitVarInit.VarInit ::= Ident "=" RValue;
 separator VarInit ",";
 
-BlockValue.Block ::= "{" [SuperStatement] "}";
-terminator SuperStatement "";
-StatementSS.SuperStatement ::= Statement ";";
-FlowControlSS.SuperStatement ::= FlowControl;
-BlockSS.SuperStatement ::= Block;
-
-IfStat.FlowControl ::= "if" "(" RValue ")" SuperStatement;
-WhileStat.FlowControl ::= "while" "(" RValue ")" SuperStatement;
-
-RValStat.Statement ::= RValue;
+BlockValue.Block ::= "{" [Statement] "}";
+terminator Statement "";
+EmptyStat.Statement ::= ";";
+ExpressionStat.Statement ::= RValue ";";
+BlockStat.Statement ::= Block;
 VarDeclStat.Statement ::= Type [VarInit];
-AssignmentStat.Statement ::= LValue "=" RValue;
 ReturnStat.Statement ::= "return" RValue;
 ThrowStat.Statement ::= "throw" RValue;
 TypedefStat.Statement ::= Typedef;
+IfStat.Statement ::= "if" "(" RValue ")" Statement;
+WhileStat.Statement ::= "while" "(" RValue ")" Statement;
+ForStat.Statement ::= "for" "(" Type [VarInit] ";" RValue ";" RValue ")" Statement;
+
 
 VariableLVal.LValue ::= Id;
 MemberLVal.LValue ::= Member;
-
-EmbracedRVal.RValue ::= "(" RValue ")";
-ConstantRVal.RValue ::= Constant;
-LValueRVal.RValue ::= LValue;
-BinaryOperationRVal.RValue ::= RValue Operator RValue;
-TrinaryOperationRVal.RValue ::= RValue "?" RValue ":" RValue;
-CallRVal.RValue ::= RValue "(" [ArgumentValue] ")";
 
 DotMem.Member ::= RValue "." Ident;
 ArrowMem.Member ::= RValue "->" Ident;
 ArrayMem.Member ::= RValue "[" RValue "]";
 
+AssignmentRVal.RValue ::= LValue "=" RValue;
+ParenthesizedRVal.RValue ::= "(" RValue ")";
+ConstantRVal.RValue ::= Constant;
+LValueRVal.RValue ::= LValue;
+CallRVal.RValue ::= RValue "(" [ArgumentValue] ")";
 
-CommaOp.Operator ::= ",";
-AddOp.Operator ::= "+";
-SubOp.Operator ::= "-";
-MulOp.Operator ::= "*";
-DivOp.Operator ::= "/";
-ModOp.Operator ::= "%";
-LShiftOp.Operator ::= "<<";
-RShiftArithmeticOp.Operator ::= ">>";
-RShiftLogicalOp.Operator ::= ">>>";
-EqOp.Operator ::= "==";
-And1Op.Operator ::= "&";
-AndOp.Operator ::= "&&";
-Or1Op.Operator ::= "|";
-OrOp.Operator ::= "||";
+UnaryOperationRVal.RValue ::= UnaryOperation;
+BinaryOperationRVal.RValue ::= BinaryOperation;
+TrinaryOperationRVal.RValue ::= TrinaryOperation;
+
+
+RefUnOp.UnaryOperation ::= "&" RValue;
+DeRefUnOp.UnaryOperation ::= "*" RValue;
+NotUnOp.UnaryOperation ::= "!" RValue;
+InvertUnOp.UnaryOperation ::= "~" RValue;
+PreIncUnOp.UnaryOperation ::= "++" RValue;
+PostIncUnOp.UnaryOperation ::= RValue "++";
+PreDecUnOp.UnaryOperation ::= "--" RValue;
+PostDecUnOp.UnaryOperation ::= RValue "--";
+PositiveUnOp.UnaryOperation ::= "+" RValue;
+NegativeUnOp.UnaryOperation ::= "-" RValue;
+
+CommaBinOp.BinaryOperation ::= RValue "," RValue;
+AddBinOp.BinaryOperation ::= RValue "+" RValue;
+SubBinOp.BinaryOperation ::= RValue "-" RValue;
+MulBinOp.BinaryOperation ::= RValue "*" RValue;
+DivBinOp.BinaryOperation ::= RValue "/" RValue;
+ModBinOp.BinaryOperation ::= RValue "%" RValue;
+LShiftBinOp.BinaryOperation ::= RValue "<<" RValue;
+RShiftArithmeticBinOp.BinaryOperation ::= RValue ">>" RValue;
+RShiftLogicalBinOp.BinaryOperation ::= RValue ">>>" RValue;
+And1BinOp.BinaryOperation ::= RValue "&" RValue;
+Or1BinOp.BinaryOperation ::= RValue "|" RValue;
+AndBinOp.BinaryOperation ::= RValue "&&" RValue;
+OrBinOp.BinaryOperation ::= RValue "||" RValue;
+EqBinOp.BinaryOperation ::= RValue "==" RValue;
+NotEqBinOp.BinaryOperation ::= RValue "!=" RValue;
+GreaterBinOp.BinaryOperation ::= RValue "µ" RValue;
+GreaterEqBinOp.BinaryOperation ::= RValue ">=" RValue;
+LessBinOp.BinaryOperation ::= RValue "µ" RValue;
+LessEqBinOp.BinaryOperation ::= RValue "<=" RValue;
+
+IfTriOp.TrinaryOperation ::= RValue "?" RValue ":" RValue;
+
 
 SimpleType.Type ::= Ident;
 ScopedType.Type ::= Type "::" Ident;
