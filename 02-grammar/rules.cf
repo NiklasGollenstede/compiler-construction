@@ -2,61 +2,77 @@ comment "//";
 comment "/*" "*/";
 comment "#";
 
-ProgramValue.Program ::= [Definition];
+ProgramInst.Program ::= [Definition];
 terminator Definition "";
 
-TypedefValue.Typedef ::= "typedef" Type Ident;
-
-TypedefDef.Definition ::= Typedef ";";
 UsingTypeDef.Definition ::= "using" Type ";";
 UsingNamespaceDef.Definition ::= "using" "namespace" NamespaceName ";";
+VarDeclDef.Definition ::= VarDecl ";";
+TypedefDef.Definition ::= Typedef ";";
 
-FunctionDeclValue.FunctionDecl ::= Type Id "(" [ArgumentDecl] ")";
+FunctionDeclInst.FunctionDecl ::= ConstType Id "(" [ArgumentDecl] ")";
 FunctionDeclDef.Definition ::= FunctionDecl ";";
 FunctionDef.Definition ::= FunctionDecl Block;
+InlineFunctionDeclDef.Definition ::= "inline" FunctionDecl ";";
 InlineFunctionDef.Definition ::= "inline" FunctionDecl Block;
 separator ArgumentDecl ",";
-separator ArgumentValue ",";
-ArgumentValueValue.ArgumentValue ::= RValue;
-VariableArgumentDecl.ArgumentDecl ::= VarDecl;
-TypeArgumentDecl.ArgumentDecl ::= Type;
+VariableArgumentDecl.ArgumentDecl ::= ConstType Identifier;
+TypeArgumentDecl.ArgumentDecl ::= ConstType;
 
-DefaultVarDecl.VarDecl ::= Type Ident;
-DefaultVarInit.VarInit ::= Ident;
-InitVarInit.VarInit ::= Ident "=" RValue;
-separator VarInit ",";
+TypedefInst.Typedef ::= "typedef" Type Identifier;
 
-BlockValue.Block ::= "{" [Statement] "}";
+VarDeclInst.VarDecl ::= ConstType [VarInit] VarInit;
+terminator VarDecl ";";
+DefaultVarInit.VarInit ::= Identifier;
+InitVarInit.VarInit ::= Identifier "=" RValue;
+terminator VarInit ",";
+
+StructInst.Struct ::= "struct" Identifier "{" [VarDecl] "}";
+
+BlockInst.Block ::= "{" [Statement] "}";
 terminator Statement "";
 EmptyStat.Statement ::= ";";
 ExpressionStat.Statement ::= RValue ";";
 BlockStat.Statement ::= Block;
-VarDeclStat.Statement ::= Type [VarInit];
-ReturnStat.Statement ::= "return" RValue;
-ThrowStat.Statement ::= "throw" RValue;
-TypedefStat.Statement ::= Typedef;
+VarDeclStat.Statement ::= VarDecl ";";
+ReturnStat.Statement ::= "return" RValue ";";
+ThrowStat.Statement ::= "throw" RValue ";";
+TypedefStat.Statement ::= Typedef ";";
 IfStat.Statement ::= "if" "(" RValue ")" Statement;
+IfElseStat.Statement ::= "if" "(" RValue ")" Statement "else" Statement;
 WhileStat.Statement ::= "while" "(" RValue ")" Statement;
-ForStat.Statement ::= "for" "(" Type [VarInit] ";" RValue ";" RValue ")" Statement;
+DoStat.Statement ::= "do" Statement "while" "(" RValue ")";
+ForStat.Statement ::= "for" "(" ConstType [VarInit] VarInit ";" RValue ";" RValue ")" Statement;
 
 
 VariableLVal.LValue ::= Id;
 MemberLVal.LValue ::= Member;
 
-DotMem.Member ::= RValue "." Ident;
-ArrowMem.Member ::= RValue "->" Ident;
+DotMem.Member ::= RValue "." Identifier;
+ArrowMem.Member ::= RValue "->" Identifier;
 ArrayMem.Member ::= RValue "[" RValue "]";
 
-AssignmentRVal.RValue ::= LValue "=" RValue;
-ParenthesizedRVal.RValue ::= "(" RValue ")";
-ConstantRVal.RValue ::= Constant;
 LValueRVal.RValue ::= LValue;
-CallRVal.RValue ::= RValue "(" [ArgumentValue] ")";
+ConstantRVal.RValue ::= Constant;
+StructRVal.RValue ::= Struct;
+ParenthesizedRVal.RValue ::= "(" RValue ")";
+CallRVal.RValue ::= RValue "(" [FunctionArgument] ")";
+separator FunctionArgument ",";
+FunctionArgumentInst.FunctionArgument ::= RValue;
 
+AssignOperatorRVal.RValue ::= AssignOperator;
 UnaryOperationRVal.RValue ::= UnaryOperation;
 BinaryOperationRVal.RValue ::= BinaryOperation;
 TrinaryOperationRVal.RValue ::= TrinaryOperation;
 
+SimpleAssOp.AssignOperator ::= LValue "=" RValue;
+AddAssOp.AssignOperator ::= LValue "+=" RValue;
+SubAssOp.AssignOperator ::= LValue "-=" RValue;
+MulAssOp.AssignOperator ::= LValue "*=" RValue;
+DivAssOp.AssignOperator ::= LValue "/=" RValue;
+ModAssOp.AssignOperator ::= LValue "%=" RValue;
+AndAssOp.AssignOperator ::= LValue "&=" RValue;
+Or1AssOp.AssignOperator ::= LValue "|=" RValue;
 
 RefUnOp.UnaryOperation ::= "&" RValue;
 DeRefUnOp.UnaryOperation ::= "*" RValue;
@@ -84,32 +100,45 @@ AndBinOp.BinaryOperation ::= RValue "&&" RValue;
 OrBinOp.BinaryOperation ::= RValue "||" RValue;
 EqBinOp.BinaryOperation ::= RValue "==" RValue;
 NotEqBinOp.BinaryOperation ::= RValue "!=" RValue;
-GreaterBinOp.BinaryOperation ::= RValue "µ" RValue;
+GreaterBinOp.BinaryOperation ::= RValue ">" RValue;
 GreaterEqBinOp.BinaryOperation ::= RValue ">=" RValue;
-LessBinOp.BinaryOperation ::= RValue "µ" RValue;
+LessBinOp.BinaryOperation ::= RValue "<" RValue;
 LessEqBinOp.BinaryOperation ::= RValue "<=" RValue;
 
-IfTriOp.TrinaryOperation ::= RValue "?" RValue ":" RValue;
+PlexTriOp.TrinaryOperation ::= RValue "?" RValue ":" RValue;
 
 
-SimpleType.Type ::= Ident;
-ScopedType.Type ::= Type "::" Ident;
-TemplatedType.Type ::= Ident "<" [ArgumentValue] ">";
-ScopedTemplatedType.Type ::= Type "::" Ident "<" [ArgumentValue] ">";
+IdInst.Id ::= [TypeSegment] Identifier;
+
+SimpleType.Type ::= BuildInType;
+ScopedType.Type ::= [TypeSegment] TypeSegment;
+terminator TypeSegment "::";
+IdentifierCT.TypeSegment ::= Identifier;
+TemplatedCT.TypeSegment ::= Identifier "<" [TemplateArgument] TemplateArgument ">";
+terminator TemplateArgument ",";
+RValTemplateArgument.TemplateArgument ::= Constant;
+TypeTemplateArgument.TemplateArgument ::= ConstType;
+
 ReferenceType.Type ::= Type "&";
 PointerType.Type ::= Type "*";
-ConstType.Type ::= "const" Type;
+NotConstType.ConstType ::= Type;
+ConstConstType.ConstType ::= "const" Type;
 
-SimpleId.Id ::= Ident;
-ScopedId.Id ::= NamespaceName "::" Ident;
-SimpleNamespaceName.NamespaceName ::= Ident;
-NestedNamespaceName.NamespaceName ::= NamespaceName "::" Ident;
+NamespaceNameInit.NamespaceName ::= Id;
 
+IntBI.BuildInType ::= "int";
+BoolBI.BuildInType ::= "bool";
+DoubleBI.BuildInType ::= "double";
+VoidBI.BuildInType ::= "void";
+LongBI.BuildInType ::= "long";
+LongLongBI.BuildInType ::= "long" "long";
 
 IntConst.Constant ::= Integer;
-StringConst.Constant ::= [String];
+StringConst.Constant ::= [String] String;
 separator String "";
 DoubleConst.Constant ::= Double;
 CharConst.Constant ::= Char;
 TrueConst.Constant ::= "true";
 FalseConst.Constant ::= "false";
+
+token Identifier (letter(letter|digit|'_')*)
