@@ -271,7 +271,7 @@ TypenameTemplateArgument.TemplateArgument ::= Datatype;
 // Base datatypes.
 // ------------------------------------------------------------------
 PrimitiveBaseDatatype.BaseDatatype ::= BuiltinPrimitive;
-StdBaseDatatype.BaseDatatype       ::= [ScopeSegment] ScopeSegment;
+ComplexBaseDatatype.BaseDatatype   ::= [ScopeSegment] ScopeSegment;
 // ------------------------------------------------------------------
 
 
@@ -279,7 +279,7 @@ StdBaseDatatype.BaseDatatype       ::= [ScopeSegment] ScopeSegment;
 // ------------------------------------------------------------------
 // Namespace names.
 // ------------------------------------------------------------------
-StdNamespaceName.NamespaceName ::= Identifier;
+StdNamespaceName.NamespaceName    ::= Identifier;
 ScopedNamespaceName.NamespaceName ::= NamespaceName "::" Identifier;
 // ------------------------------------------------------------------
 
@@ -289,12 +289,12 @@ ScopedNamespaceName.NamespaceName ::= NamespaceName "::" Identifier;
 // Constant values.
 // ------------------------------------------------------------------
 separator String "";
-IntConst.Constant    ::= Integer;
-StringConst.Constant ::= [String] String;
-DoubleConst.Constant ::= Double;
-CharConst.Constant   ::= Char;
-TrueConst.Constant   ::= "true";
-FalseConst.Constant  ::= "false";
+IntConstant.Constant    ::= Integer;
+StringConstant.Constant ::= [String] String;
+DoubleConstant.Constant ::= Double;
+CharConstant.Constant   ::= Char;
+TrueConstant.Constant   ::= "true";
+FalseConstant.Constant  ::= "false";
 // ------------------------------------------------------------------
 
 
@@ -304,7 +304,7 @@ FalseConst.Constant  ::= "false";
 // ------------------------------------------------------------------
 VoidPrimitiveDatatype.BuiltinPrimitive        ::= "void";
 BoolPrimitiveDatatype.BuiltinPrimitive        ::= "bool";
-// CharPrimitiveDatatype.BuiltinPrimitive	  ::= "char";
+CharPrimitiveDatatype.BuiltinPrimitive        ::= "char";
 ShortIntPrimitiveDatatype.BuiltinPrimitive    ::= "short" "int";
 IntPrimitiveDatatype.BuiltinPrimitive         ::= "int";
 LongIntPrimitiveDatatype.BuiltinPrimitive     ::= "long" "int";
