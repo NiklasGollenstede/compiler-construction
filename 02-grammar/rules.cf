@@ -41,6 +41,7 @@ terminator Definition "";
 //		- variable declarations 
 //		- (inline) function declarations & definitions
 // ------------------------------------------------------------------
+separator FunctionArgumentDeclaration ",";
 UsingTypeDefinition.Definition                 ::= "using" BaseDatatype ";";
 UsingNamespaceDefinition.Definition            ::= "using" "namespace" NamespaceName ";";
 TypedefDefinition.Definition                   ::= Typedef ";";
@@ -49,7 +50,7 @@ FunctionDeclarationDefinition.Definition       ::= FunctionDeclaration ";";
 FunctionDefinition.Definition                  ::= FunctionDeclaration Block;
 InlineFunctionDeclarationDefinition.Definition ::= "inline" FunctionDeclaration ";";
 InlineFunctionDefinition.Definition            ::= "inline" FunctionDeclaration Block;
-StdFunctionDeclaration.FunctionDeclaration     ::= Datatype Id "(" [FunctionArgumentDeclaration] ")";
+StdFunctionDeclaration.FunctionDeclaration     ::= Datatype UUID "(" [FunctionArgumentDeclaration] ")";
 // ------------------------------------------------------------------
 
 
@@ -57,9 +58,8 @@ StdFunctionDeclaration.FunctionDeclaration     ::= Datatype Id "(" [FunctionArgu
 // ------------------------------------------------------------------
 // Function arguments.
 // ------------------------------------------------------------------
-separator FunctionArgumentDeclaration ",";
-VariableArgumentDecl.FunctionArgumentDeclaration ::= Datatype Identifier;
-TypeArgumentDecl.FunctionArgumentDeclaration     ::= Datatype;
+StdFunctionArgumentDeclaration.FunctionArgumentDeclaration       ::= Datatype Identifier;
+AnonymousFunctionArgumentDeclaration.FunctionArgumentDeclaration ::= Datatype;
 // ------------------------------------------------------------------
 
 
@@ -123,7 +123,7 @@ ForLoopStatement.Statement                 ::= "for" "(" VariableDeclarationList
 // ------------------------------------------------------------------
 // LValues can be variables or dereferences.
 // ------------------------------------------------------------------
-VariableLValue.LValue  ::= Id;
+VariableLValue.LValue  ::= UUID;
 DerefenceLValue.LValue ::= Dereference;
 // ------------------------------------------------------------------
 
@@ -233,9 +233,12 @@ StdTernaryOperation.TernaryOperation ::= RValue "?" RValue ":" RValue;
 
 
 // ------------------------------------------------------------------
-// Variable / function ids.
+// UUIDs denote valid identifiers for variable, type 
+// and function names. They may be nested arbitrarily deeply inside
+// scopes.
 // ------------------------------------------------------------------
-StdId.Id ::= [ScopeSegment] Identifier;
+terminator ScopeSegment "::";
+StdUUID.UUID ::= [ScopeSegment] Identifier;
 // ------------------------------------------------------------------
 
 
@@ -256,10 +259,10 @@ ConstDatatype.Datatype     ::= "const" Datatype;
 // Templates.
 // ------------------------------------------------------------------
 terminator TemplateArgument ",";
-IdentifierScopeSegment.ScopeSegment          ::= Identifier;
-TemplatedIdentifierScopeSegment.ScopeSegment ::= Identifier "<" [TemplateArgument] TemplateArgument ">";
-ConstantTemplateArgument.TemplateArgument    ::= Constant;
-TypenameTemplateArgument.TemplateArgument    ::= Datatype;
+StdScopeSegment.ScopeSegment              ::= Identifier;
+TemplateScopeSegment.ScopeSegment         ::= Identifier "<" [TemplateArgument] TemplateArgument ">";
+ConstantTemplateArgument.TemplateArgument ::= Constant;
+TypenameTemplateArgument.TemplateArgument ::= Datatype;
 // ------------------------------------------------------------------
 
 
@@ -267,10 +270,8 @@ TypenameTemplateArgument.TemplateArgument    ::= Datatype;
 // ------------------------------------------------------------------
 // Base datatypes.
 // ------------------------------------------------------------------
-terminator ScopeSegment "::";
-StdBaseDatatype.BaseDatatype       ::= Identifier;
 PrimitiveBaseDatatype.BaseDatatype ::= BuiltinPrimitive;
-ScopedBaseDatatype.BaseDatatype    ::= [ScopeSegment] ScopeSegment "::" Identifier;
+StdBaseDatatype.BaseDatatype       ::= [ScopeSegment] ScopeSegment;
 // ------------------------------------------------------------------
 
 
@@ -278,7 +279,8 @@ ScopedBaseDatatype.BaseDatatype    ::= [ScopeSegment] ScopeSegment "::" Identifi
 // ------------------------------------------------------------------
 // Namespace names.
 // ------------------------------------------------------------------
-StdNamespaceName.NamespaceName ::= Id;
+StdNamespaceName.NamespaceName ::= Identifier;
+ScopedNamespaceName.NamespaceName ::= NamespaceName "::" Identifier;
 // ------------------------------------------------------------------
 
 
@@ -302,7 +304,7 @@ FalseConst.Constant  ::= "false";
 // ------------------------------------------------------------------
 VoidPrimitiveDatatype.BuiltinPrimitive        ::= "void";
 BoolPrimitiveDatatype.BuiltinPrimitive        ::= "bool";
-CharPrimitiveDatatype.BuiltinPrimitive	      ::= "char";
+// CharPrimitiveDatatype.BuiltinPrimitive	  ::= "char";
 ShortIntPrimitiveDatatype.BuiltinPrimitive    ::= "short" "int";
 IntPrimitiveDatatype.BuiltinPrimitive         ::= "int";
 LongIntPrimitiveDatatype.BuiltinPrimitive     ::= "long" "int";
