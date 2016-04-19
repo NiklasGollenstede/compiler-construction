@@ -8,11 +8,8 @@ name="${grammarfile%.*}"
 rm "${name}" 
 
 # Create / clear build directory.
-if [! -d "${name}.build" ]; then
-	mkdir "${name}.build"
-else
-	rm -f "${name}.build/*"
-fi
+rm -r "${name}.build"
+mkdir "${name}.build"
 
 # Remove all lines starting with / (comments)
 # and save the result as name.temp.cf 
