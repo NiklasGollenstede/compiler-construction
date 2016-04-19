@@ -1,15 +1,15 @@
 // ------------------------------------------------------------------
-// > File:          rules.cf                                        -
+// > File:          rules.cf                                        
 // ------------------------------------------------------------------
-// > Author(s):     GOLLENSTEDE, Niklas                             -
-//				    HAUSWALD, Tom                                   -
+// > Author(s):     GOLLENSTEDE, Niklas                             
+//                  HAUSWALD, Tom                                   
 // ------------------------------------------------------------------
-// > Description:                                                   -
-// 		Contains the grammar definition used for the compiler       -
-//		construction course at TUHH during summer semester 2016.    -
-//		Implements language features per specification found at     -
-//		http://www1.digitalgrammars.com/ipl-book/assignments/       -
-//      assignment1/assignment1.html                                -
+// > Description:                                                   
+//      Contains the grammar definition used for the compiler       
+//      construction course at TUHH during summer semester 2016.    
+//      Implements language features per specification found at     
+//      http://www1.digitalgrammars.com/ipl-book/assignments/       
+//      assignment1/assignment1.html                                
 // ------------------------------------------------------------------
 
 
