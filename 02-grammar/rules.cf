@@ -1,15 +1,15 @@
 // ------------------------------------------------------------------
-// > File:          rules.cf                                        
+// > File:          rules.cf
 // ------------------------------------------------------------------
-// > Author(s):     GOLLENSTEDE, Niklas                             
-//                  HAUSWALD, Tom                                   
+// > Author(s):     GOLLENSTEDE, Niklas
+//                  HAUSWALD, Tom
 // ------------------------------------------------------------------
-// > Description:                                                   
-//      Contains the grammar definition used for the compiler       
-//      construction course at TUHH during summer semester 2016.    
-//      Implements language features per specification found at     
-//      http://www1.digitalgrammars.com/ipl-book/assignments/       
-//      assignment1/assignment1.html                                
+// > Description:
+//      Contains the grammar definition used for the compiler
+//      construction course at TUHH during summer semester 2016.
+//      Implements language features per specification found at
+//      http://www1.digitalgrammars.com/ipl-book/assignments/
+//      assignment1/assignment1.html
 // ------------------------------------------------------------------
 
 
@@ -38,7 +38,7 @@ terminator Definition "";
 // Definitions can be:
 // 		- using statements
 //		- typedefs
-//		- variable declarations 
+//		- variable declarations
 //		- (inline) function declarations & definitions
 // ------------------------------------------------------------------
 UsingTypeDefinition.Definition                 ::= "using" BaseDatatype ";";
@@ -149,12 +149,12 @@ ArrayDereference.Dereference   ::= RValue "[" RValue "]";
 // ------------------------------------------------------------------
 // Basic RValue types.
 // ------------------------------------------------------------------
-separator FunctionArgument ",";
-ImplicitRValue.RValue                ::= LValue;
-ConstantRValue.RValue                ::= Constant;
-ParenthesesRValue.RValue             ::= "(" RValue ")";
-FunctionCallRValue.RValue            ::= RValue "(" [FunctionArgument] ")";
-StdFunctionArgument.FunctionArgument ::= RValue;
+ImplicitRValue         .RValue ::= LValue;
+ConstantRValue         .RValue ::= Constant;
+ParenthesesRValue      .RValue ::= "(" RValue ")";
+OperatorRValue         .RValue ::= Operation;
+separator               FunctionArgument ",";
+StdFunctionArgument    .FunctionArgument ::= RValue;
 // ------------------------------------------------------------------
 
 
@@ -162,88 +162,62 @@ StdFunctionArgument.FunctionArgument ::= RValue;
 // ------------------------------------------------------------------
 // RValues can be the result of operations.
 // ------------------------------------------------------------------
-AssignmentOperationRValue.RValue ::= AssignmentOperation;
-UnaryOperationRValue.RValue      ::= UnaryOperation;
-BinaryOperationRValue.RValue     ::= BinaryOperation;
-TernaryOperationRValue.RValue    ::= TernaryOperation;
-// ------------------------------------------------------------------
+PostIncUnaryOperation      .Operation2 ::= RValue "++";
+PostDecUnaryOperation      .Operation2 ::= RValue "--";
+FuncCallBinaryOperation    .Operation2 ::= RValue "(" [FunctionArgument] ")";
+// SubscriptBinaryOperation   .Operation2 ::= RValue "[" RValue "]";
+// DotMemBinaryOperation      .Operation2 ::= RValue "." Identifier;
+// ArrowMemBinaryOperation    .Operation2 ::= RValue "->" Identifier;
 
+PreIncUnaryOperation       .Operation3 ::= "++" RValue;
+PreDecUnaryOperation       .Operation3 ::= "--" RValue;
+PositiveUnaryOperation     .Operation3 ::= "+" RValue;
+NegativeUnaryOperation     .Operation3 ::= "-" RValue;
+NotUnaryOperation          .Operation3 ::= "!" RValue;
+InvertUnaryOperation       .Operation3 ::= "~" RValue;
+DeRefUnaryOperation        .Operation3 ::= "*" RValue;
+RefUnaryOperation          .Operation3 ::= "&" RValue;
 
+MulBinaryOperation         .Operation5 ::= RValue "*" RValue;
+DivBinaryOperation         .Operation5 ::= RValue "/" RValue;
+ModBinaryOperation         .Operation5 ::= RValue "%" RValue;
 
-// ------------------------------------------------------------------
-// Assignment operations.
-// ------------------------------------------------------------------
-StdAssignmentOperation.AssignmentOperation     ::= LValue "=" RValue;
-AddAssignmentOperation.AssignmentOperation     ::= LValue "+=" RValue;
-SubAssignmentOperation.AssignmentOperation     ::= LValue "-=" RValue;
-MulAssignmentOperation.AssignmentOperation     ::= LValue "*=" RValue;
-DivAssignmentOperation.AssignmentOperation     ::= LValue "/=" RValue;
-ModAssignmentOperation.AssignmentOperation     ::= LValue "%=" RValue;
-AndAssignmentOperation.AssignmentOperation     ::= LValue "&=" RValue;
-ArithOrAssignmentOperation.AssignmentOperation ::= LValue "|=" RValue;
-// ------------------------------------------------------------------
+AddBinaryOperation         .Operation6 ::= RValue "+" RValue;
+SubBinaryOperation         .Operation6 ::= RValue "-" RValue;
 
+LShiftBinaryOperation      .Operation7 ::= RValue "<<" RValue;
+RShiftBinaryOperation      .Operation7 ::= RValue ">>" RValue;
 
+GrBinaryOperation          .Operation8 ::= RValue ">" RValue;
+GrEqBinaryOperation        .Operation8 ::= RValue ">=" RValue;
+LsBinaryOperation          .Operation8 ::= RValue "<" RValue;
+LsEqBinaryOperation        .Operation8 ::= RValue "<=" RValue;
 
+EqBinaryOperation          .Operation9 ::= RValue "==" RValue;
+NotEqBinaryOperation       .Operation9 ::= RValue "!=" RValue;
 
-// ------------------------------------------------------------------
-// Unary operations.
-// ------------------------------------------------------------------
-ReferenceUnaryOperation.UnaryOperation     ::= "&" RValue;
-DereferenceUnaryOperation.UnaryOperation   ::= "*" RValue;
-NotUnaryOperation.UnaryOperation           ::= "!" RValue;
-InvertUnaryOperation.UnaryOperation        ::= "~" RValue;
-PreincrementUnaryOperation.UnaryOperation  ::= "++" RValue;
-PostincrementUnaryOperation.UnaryOperation ::= RValue "++";
-PredecrementUnaryOperation.UnaryOperation  ::= "--" RValue;
-PostdecrementUnaryOperation.UnaryOperation ::= RValue "--";
-NegateUnaryOperation.UnaryOperation        ::= "-" RValue;
-PositiveUnaryOperation.UnaryOperation      ::= "+" RValue;
-// ------------------------------------------------------------------
+AndBitBinaryOperation      .Operation10 ::= RValue "&" RValue;
+XorBitBinaryOperation      .Operation11 ::= RValue "^" RValue;
+OrBitBinaryOperation       .Operation12 ::= RValue "|" RValue;
 
+AndBinaryOperation         .Operation13 ::= RValue "&&" RValue;
+OrBinaryOperation          .Operation14 ::= RValue "||" RValue;
 
+StdTernaryOperation        .Operation15 ::= RValue "?" RValue ":" RValue;
+StdAssignmentOperation     .Operation15 ::= LValue "=" RValue;
+AddAssignmentOperation     .Operation15 ::= LValue "+=" RValue;
+SubAssignmentOperation     .Operation15 ::= LValue "-=" RValue;
+MulAssignmentOperation     .Operation15 ::= LValue "*=" RValue;
+DivAssignmentOperation     .Operation15 ::= LValue "/=" RValue;
+ModAssignmentOperation     .Operation15 ::= LValue "%=" RValue;
+LShiftAssignmentOperation  .Operation15 ::= LValue "<<=" RValue;
+RShiftAssignmentOperation  .Operation15 ::= LValue ">>=" RValue;
+AndBitAssignmentOperation  .Operation15 ::= LValue "&=" RValue;
+XorBitAssignmentOperation  .Operation15 ::= LValue "^=" RValue;
+OrBitAssignmentOperation   .Operation15 ::= LValue "|=" RValue;
 
-// ------------------------------------------------------------------
-// Binary operations.
-// ------------------------------------------------------------------
-//CommaBinaryOperation.BinaryOperation            ::= RValue "," RValue;
-AddBinaryOperation.BinaryOperation              ::= RValue "+" RValue;
-SubBinaryOperation.BinaryOperation              ::= RValue "-" RValue;
-MulBinaryOperation.BinaryOperation              ::= RValue "*" RValue;
-DivBinaryOperation.BinaryOperation              ::= RValue "/" RValue;
-ModBinaryOperation.BinaryOperation              ::= RValue "%" RValue;
-LShiftBinaryOperation.BinaryOperation           ::= RValue "<<" RValue;
-RShiftArithmeticBinaryOperation.BinaryOperation ::= RValue ">>" RValue;
-RShiftLogicalBinaryOperation.BinaryOperation    ::= RValue ">>>" RValue;
-ArithAndBinaryOperation.BinaryOperation         ::= RValue "&" RValue;
-ArithOrBinaryOperation.BinaryOperation          ::= RValue "|" RValue;
-BoolAndBinaryOperation.BinaryOperation          ::= RValue "&&" RValue;
-BoolOrBinaryOperation.BinaryOperation           ::= RValue "||" RValue;
-EqBinaryOperation.BinaryOperation               ::= RValue "==" RValue;
-UneqBinaryOperation.BinaryOperation             ::= RValue "!=" RValue;
-GreaterThanBinaryOperation.BinaryOperation      ::= RValue ">" RValue;
-GreaterEqualThanBinaryOperation.BinaryOperation ::= RValue ">=" RValue;
-LessThanBinaryOperation.BinaryOperation         ::= RValue "<" RValue;
-LessEqualThanBinaryOperation.BinaryOperation    ::= RValue "<=" RValue;
-// ------------------------------------------------------------------
-
-
-
-// ------------------------------------------------------------------
-// Ternary operations.
-// ------------------------------------------------------------------
-StdTernaryOperation.TernaryOperation ::= RValue "?" RValue ":" RValue;
-// ------------------------------------------------------------------
-
-
-
-// ------------------------------------------------------------------
-// Item names denote valid identifiers to access variables, types
-// and functions. (They may be nested arbitrarily deeply inside
-// scopes.)
-// ------------------------------------------------------------------
-terminator ScopeSegment "::";
-StdItemName.ItemName ::= [ScopeSegment] Identifier;
+// CommaBinaryOperation       .Operation16 ::= RValue "," RValue;
+coercions Operation 15;
 // ------------------------------------------------------------------
 
 
@@ -264,6 +238,25 @@ PointerDatatype.Datatype   ::= Datatype "*";
 ConstPointerDatatype.Datatype ::= "const" BaseDatatype "*";
 PointerConstDatatype.Datatype ::= BaseDatatype "const" "*";
 // ------------------------------------------------------------------
+
+
+
+// ------------------------------------------------------------------
+// Base datatypes.
+// ------------------------------------------------------------------
+terminator ScopeSegment "::";
+PrimitiveBaseDatatype.BaseDatatype ::= BuiltinPrimitive;
+ComplexBaseDatatype.BaseDatatype   ::= [ScopeSegment] ScopeSegment;
+// ------------------------------------------------------------------
+
+
+
+// ------------------------------------------------------------------
+// Item names denote valid identifiers to access variables
+// and functions. (They may be nested arbitrarily deeply inside
+// scopes.)
+// ------------------------------------------------------------------
+StdItemName.ItemName ::= [ScopeSegment] Identifier;
 // ------------------------------------------------------------------
 
 
@@ -276,15 +269,6 @@ StdScopeSegment.ScopeSegment              ::= Identifier;
 TemplateScopeSegment.ScopeSegment         ::= Identifier "<" [TemplateArgument] ">";
 ConstantTemplateArgument.TemplateArgument ::= Constant;
 TypenameTemplateArgument.TemplateArgument ::= Datatype;
-// ------------------------------------------------------------------
-
-
-
-// ------------------------------------------------------------------
-// Base datatypes.
-// ------------------------------------------------------------------
-PrimitiveBaseDatatype.BaseDatatype ::= BuiltinPrimitive;
-ComplexBaseDatatype.BaseDatatype   ::= [ScopeSegment] ScopeSegment;
 // ------------------------------------------------------------------
 
 
@@ -332,5 +316,5 @@ LongDoublePrimitiveDatatype.BuiltinPrimitive  ::= "long" "double";
 // ------------------------------------------------------------------
 // General identifier structure.
 // ------------------------------------------------------------------
-token Identifier (letter(letter|digit|'_')*)
+token Identifier (letter(letter|digit|'_')*);
 // ------------------------------------------------------------------
