@@ -58,15 +58,12 @@ InlineFunctionDefinition.Definition            ::= "inline" FunctionDeclaration 
 // Function signature.
 // ------------------------------------------------------------------
 separator ArgumentDeclaration ",";
-separator nonempty DefaultArgumentDeclaration ",";
-StdFunctionDeclaration.FunctionDeclaration         ::= Datatype Identifier "(" [ArgumentDeclaration] ")";
-MixedArgsFunctionDeclaration.FunctionDeclaration   ::= Datatype Identifier "(" [ArgumentDeclaration] "," [DefaultArgumentDeclaration] ")";
-DefaultArgsFunctionDeclaration.FunctionDeclaration ::= Datatype Identifier "(" [DefaultArgumentDeclaration] ")";
+StdFunctionDeclaration.FunctionDeclaration ::= Datatype Identifier "(" [ArgumentDeclaration] ")";
 
 // Argument declaration types. (simple, unnamed or w/ default value.)
-StdArgumentDeclaration.ArgumentDeclaration               ::= Datatype Identifier;
-UnnamedFunctionArgumentDeclaration.ArgumentDeclaration   ::= Datatype;
-StdDefaultArgumentDeclaration.DefaultArgumentDeclaration ::= Datatype Identifier "=" RValue;
+UnnamedFunctionArgumentDeclaration.ArgumentDeclaration ::= Datatype;
+StdArgumentDeclaration.ArgumentDeclaration             ::= Datatype Identifier;
+DefaultValueArgumentDeclaration.ArgumentDeclaration    ::= Datatype Identifier "=" RValue;
 // ------------------------------------------------------------------
 
 
@@ -115,6 +112,7 @@ terminator Statement "";
 EmptyStatement.Statement                   ::= ";";
 RValueStatement.Statement                  ::= RValue ";";
 BlockStatement.Statement                   ::= Block;
+StructStatement.Statement                  ::= Struct ";";
 VariableDeclarationListStatement.Statement ::= VariableDeclarationList ";";
 ReturnStatement.Statement                  ::= "return" RValue ";";
 ThrowStatement.Statement                   ::= "throw" RValue ";";
@@ -131,7 +129,7 @@ ForLoopStatement.Statement                 ::= "for" "(" VariableDeclarationList
 // ------------------------------------------------------------------
 // LValues can be variables or dereferences.
 // ------------------------------------------------------------------
-VariableLValue.LValue  ::= UUID;
+VariableLValue.LValue  ::= ItemName;
 DerefenceLValue.LValue ::= Dereference;
 // ------------------------------------------------------------------
 
@@ -154,7 +152,6 @@ ArrayDereference.Dereference   ::= RValue "[" RValue "]";
 separator FunctionArgument ",";
 ImplicitRValue.RValue                ::= LValue;
 ConstantRValue.RValue                ::= Constant;
-// StructRValue.RValue               ::= Struct;
 ParenthesesRValue.RValue             ::= "(" RValue ")";
 FunctionCallRValue.RValue            ::= RValue "(" [FunctionArgument] ")";
 StdFunctionArgument.FunctionArgument ::= RValue;
@@ -201,7 +198,7 @@ PostincrementUnaryOperation.UnaryOperation ::= RValue "++";
 PredecrementUnaryOperation.UnaryOperation  ::= "--" RValue;
 PostdecrementUnaryOperation.UnaryOperation ::= RValue "--";
 NegateUnaryOperation.UnaryOperation        ::= "-" RValue;
-// PositiveUnaryOperation.UnaryOperation   ::= "+" RValue;
+PositiveUnaryOperation.UnaryOperation      ::= "+" RValue;
 // ------------------------------------------------------------------
 
 
@@ -209,7 +206,7 @@ NegateUnaryOperation.UnaryOperation        ::= "-" RValue;
 // ------------------------------------------------------------------
 // Binary operations.
 // ------------------------------------------------------------------
-CommaBinaryOperation.BinaryOperation            ::= RValue "," RValue;
+//CommaBinaryOperation.BinaryOperation            ::= RValue "," RValue;
 AddBinaryOperation.BinaryOperation              ::= RValue "+" RValue;
 SubBinaryOperation.BinaryOperation              ::= RValue "-" RValue;
 MulBinaryOperation.BinaryOperation              ::= RValue "*" RValue;
@@ -241,12 +238,12 @@ StdTernaryOperation.TernaryOperation ::= RValue "?" RValue ":" RValue;
 
 
 // ------------------------------------------------------------------
-// UUIDs denote valid identifiers to access variables, types
+// Item names denote valid identifiers to access variables, types
 // and functions. (They may be nested arbitrarily deeply inside
 // scopes.)
 // ------------------------------------------------------------------
 terminator ScopeSegment "::";
-StdUUID.UUID ::= [ScopeSegment] Identifier;
+StdItemName.ItemName ::= [ScopeSegment] Identifier;
 // ------------------------------------------------------------------
 
 
@@ -255,9 +252,17 @@ StdUUID.UUID ::= [ScopeSegment] Identifier;
 // Valid datatypes.
 // ------------------------------------------------------------------
 StdDatatype.Datatype       ::= BaseDatatype;
+ConstDatatype.Datatype     ::= "const" BaseDatatype;
+
+// References.
 ReferenceDatatype.Datatype ::= BaseDatatype "&";
+ConstReferenceDatatype.Datatype ::= "const" BaseDatatype "&";
+ReferenceConstDatatype.Datatype ::= BaseDatatype "const" "&";
+
+// Pointers.
 PointerDatatype.Datatype   ::= Datatype "*";
-ConstDatatype.Datatype     ::= "const" Datatype;
+ConstPointerDatatype.Datatype ::= "const" BaseDatatype "*";
+PointerConstDatatype.Datatype ::= BaseDatatype "const" "*";
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
