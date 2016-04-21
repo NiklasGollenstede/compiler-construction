@@ -7,9 +7,10 @@ name="${grammarfile%.*}"
 # Delete old executable.
 rm "${name}" 
 
-# Create / clear build directory.
-rm -r "${name}.build"
-mkdir "${name}.build"
+# Create build directory.
+if [ ! -d "${name}.build" ]; then
+  mkdir "${name}.build"
+fi
 
 # Remove all lines starting with / (comments)
 # and save the result as name.temp.cf 
