@@ -41,25 +41,32 @@ terminator Definition "";
 //		- variable declarations 
 //		- (inline) function declarations & definitions
 // ------------------------------------------------------------------
-separator FunctionArgumentDeclaration ",";
 UsingTypeDefinition.Definition                 ::= "using" BaseDatatype ";";
 UsingNamespaceDefinition.Definition            ::= "using" "namespace" NamespaceName ";";
 TypedefDefinition.Definition                   ::= Typedef ";";
-VariableDeclarationDefinition.Definition       ::= VariableDeclaration ";";
+StructDefinition.Definition                    ::= Struct ";";
+VariableDeclarationListDefinition.Definition   ::= VariableDeclarationList ";";
 FunctionDeclarationDefinition.Definition       ::= FunctionDeclaration ";";
 FunctionDefinition.Definition                  ::= FunctionDeclaration Block;
 InlineFunctionDeclarationDefinition.Definition ::= "inline" FunctionDeclaration ";";
 InlineFunctionDefinition.Definition            ::= "inline" FunctionDeclaration Block;
-StdFunctionDeclaration.FunctionDeclaration     ::= Datatype UUID "(" [FunctionArgumentDeclaration] ")";
 // ------------------------------------------------------------------
 
 
 
 // ------------------------------------------------------------------
-// Function arguments.
+// Function signature.
 // ------------------------------------------------------------------
-StdFunctionArgumentDeclaration.FunctionArgumentDeclaration       ::= Datatype Identifier;
-AnonymousFunctionArgumentDeclaration.FunctionArgumentDeclaration ::= Datatype;
+separator ArgumentDeclaration ",";
+separator nonempty DefaultArgumentDeclaration ",";
+StdFunctionDeclaration.FunctionDeclaration         ::= Datatype Identifier "(" [ArgumentDeclaration] ")";
+MixedArgsFunctionDeclaration.FunctionDeclaration   ::= Datatype Identifier "(" [ArgumentDeclaration] "," [DefaultArgumentDeclaration] ")";
+DefaultArgsFunctionDeclaration.FunctionDeclaration ::= Datatype Identifier "(" [DefaultArgumentDeclaration] ")";
+
+// Argument declaration types. (simple, unnamed or w/ default value.)
+StdArgumentDeclaration.ArgumentDeclaration               ::= Datatype Identifier;
+UnnamedFunctionArgumentDeclaration.ArgumentDeclaration   ::= Datatype;
+StdDefaultArgumentDeclaration.DefaultArgumentDeclaration ::= Datatype Identifier "=" RValue;
 // ------------------------------------------------------------------
 
 
@@ -75,9 +82,8 @@ StdTypedef.Typedef ::= "typedef" Datatype Identifier;
 // ------------------------------------------------------------------
 // Variable declarations may optionally initialize the variable.
 // ------------------------------------------------------------------
-terminator VariableDeclarationList ";";
-terminator VariableDeclaration ",";
-StdVariableDeclarationList.VariableDeclarationList   ::= Datatype [VariableDeclaration] VariableDeclaration;
+separator nonempty VariableDeclaration ",";
+StdVariableDeclarationList.VariableDeclarationList   ::= Datatype [VariableDeclaration];
 UninitializedVariableDeclaration.VariableDeclaration ::= Identifier;
 InitializedVariableDeclaration.VariableDeclaration   ::= Identifier "=" RValue;
 // ------------------------------------------------------------------
@@ -87,7 +93,9 @@ InitializedVariableDeclaration.VariableDeclaration   ::= Identifier "=" RValue;
 // ------------------------------------------------------------------
 // Support data structures denoted by the struct keyword.
 // ------------------------------------------------------------------
-StdStruct.Struct ::= "struct" Identifier "{" [VariableDeclarationList] "}";
+terminator nonempty VariableDeclarationList ";";
+EmptyStruct.Struct    ::= "struct" Identifier "{" "}";
+NonemptyStruct.Struct ::= "struct" Identifier "{" [VariableDeclarationList] "}";
 // ------------------------------------------------------------------
 
 
@@ -146,7 +154,7 @@ ArrayDereference.Dereference   ::= RValue "[" RValue "]";
 separator FunctionArgument ",";
 ImplicitRValue.RValue                ::= LValue;
 ConstantRValue.RValue                ::= Constant;
-StructRValue.RValue                  ::= Struct;
+// StructRValue.RValue               ::= Struct;
 ParenthesesRValue.RValue             ::= "(" RValue ")";
 FunctionCallRValue.RValue            ::= RValue "(" [FunctionArgument] ")";
 StdFunctionArgument.FunctionArgument ::= RValue;
@@ -233,9 +241,9 @@ StdTernaryOperation.TernaryOperation ::= RValue "?" RValue ":" RValue;
 
 
 // ------------------------------------------------------------------
-// UUIDs denote valid identifiers for variable, type 
-// and function names. They may be nested arbitrarily deeply inside
-// scopes.
+// UUIDs denote valid identifiers to access variables, types
+// and functions. (They may be nested arbitrarily deeply inside
+// scopes.)
 // ------------------------------------------------------------------
 terminator ScopeSegment "::";
 StdUUID.UUID ::= [ScopeSegment] Identifier;
@@ -258,9 +266,9 @@ ConstDatatype.Datatype     ::= "const" Datatype;
 // ------------------------------------------------------------------
 // Templates.
 // ------------------------------------------------------------------
-terminator TemplateArgument ",";
+separator nonempty TemplateArgument ",";
 StdScopeSegment.ScopeSegment              ::= Identifier;
-TemplateScopeSegment.ScopeSegment         ::= Identifier "<" [TemplateArgument] TemplateArgument ">";
+TemplateScopeSegment.ScopeSegment         ::= Identifier "<" [TemplateArgument] ">";
 ConstantTemplateArgument.TemplateArgument ::= Constant;
 TypenameTemplateArgument.TemplateArgument ::= Datatype;
 // ------------------------------------------------------------------
