@@ -86,7 +86,6 @@ QualifiedTypedef.Typedef ::= "typedef" DerivedQualifiedType Identifier;
 // Variable declarations may optionally initialize the variable.
 // ------------------------------------------------------------------
 separator nonempty VariableDeclaration ",";
-separator TypeModifier "";
 PrimitiveTypeVariableDeclarationList.VariableDeclarationList ::= DerivedPrimitiveType [VariableDeclaration];
 QualifiedTypeVariableDeclarationList.VariableDeclarationList ::= DerivedQualifiedType [VariableDeclaration];
 
@@ -94,13 +93,21 @@ StdVariableDeclaration.VariableDeclaration   ::= Identifier VariableInitializer;
 EmptyVariableInitializer.VariableInitializer ::= ;
 StdVariableInitializer.VariableInitializer   ::= "=" RValue;
 
-EmptyConstModifier.ConstModifier   ::= ;
-StdConstModifier.ConstModifier     ::= "const";
-EmptyTypeModifier.TypeModifier     ::= ;
-ReferenceTypeModifier.TypeModifier ::= "&";
-PointerTypeModifier.TypeModifier   ::= "*" TypeModifier;
-StdDerivedPrimitiveType.DerivedPrimitiveType ::= ConstModifier BuiltinPrimitive TypeModifier;
-StdDerivedQualifiedType.DerivedQualifiedType ::= ConstModifier QualifiedName    TypeModifier;
+separator nonempty TypeExtension "";
+StdPrimitive.DerivedPrimitiveType     ::= BuiltinPrimitive;
+StdQualifiedType.DerivedQualifiedType ::= QualifiedName;
+
+ConstPrimitive.DerivedPrimitiveType     ::= "const" BuiltinPrimitive;
+ConstQualifiedType.DerivedQualifiedType ::= "const" QualifiedName;
+
+ExtendedPrimitive.DerivedPrimitiveType     ::= BuiltinPrimitive [TypeExtension];
+ExtendedQualifiedType.DerivedQualifiedType ::= QualifiedName [TypeExtension];
+
+ConstExtendedPrimitive.DerivedPrimitiveType     ::= "const" BuiltinPrimitive [TypeExtension];
+ConstExtendedQualifiedType.DerivedQualifiedType ::= "const" QualifiedName [TypeExtension];
+
+PointerTypeExtension.TypeExtension   ::= "*";
+ReferenceTypeExtension.TypeExtension ::= "&";
 // ------------------------------------------------------------------
 
 
@@ -138,7 +145,7 @@ IfStatement.Statement                      ::= "if" "(" RValue ")" Statement;
 IfElseStatement.Statement                  ::= "if" "(" RValue ")" Statement "else" Statement;
 WhileLoopStatement.Statement               ::= "while" "(" RValue ")" Statement;
 DoWhileLoopStatement.Statement             ::= "do" Statement "while" "(" RValue ")";
-ForLoopStatement.Statement                 ::= "for" "(" VariableDeclarationList ";" RValue ";" Statement ")" Statement;
+ForLoopStatement.Statement                 ::= "for" "(" VariableDeclarationList ";" RValue ";" RValue ")" Statement;
 // ------------------------------------------------------------------
 
 
