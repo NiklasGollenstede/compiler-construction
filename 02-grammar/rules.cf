@@ -28,8 +28,8 @@ comment "#";
 // ------------------------------------------------------------------
 // A program is a definition list of arbitrary length.
 // ------------------------------------------------------------------
-terminator Definition "";
 StdProgram.Program ::= [Definition];
+terminator Definition "";
 // ------------------------------------------------------------------
 
 
@@ -42,7 +42,7 @@ StdProgram.Program ::= [Definition];
 //		- (inline) function declarations & definitions
 // ------------------------------------------------------------------
 UsingTypeDefinition                 .Definition ::= "using" QualifiedName ";";
-UsingNamespaceDefinition            .Definition ::= "using" "namespace" QualifiedName ";";
+UsingNamespaceDefinition            .Definition ::= "using" "namespace" Namespace ";";
 TypedefDefinition                   .Definition ::= Typedef ";";
 StructDefinition                    .Definition ::= Struct ";";
 VariableDeclarationListDefinition   .Definition ::= VariableDeclarationList ";";
@@ -170,10 +170,10 @@ ArrayMemberAccess .MemberAccess ::= RValue "[" RValue "]";
 // ------------------------------------------------------------------
 // Basic RValue types.
 // ------------------------------------------------------------------
-ImplicitRValue    .RValue ::= LValue;
-ConstantRValue    .RValue ::= Constant;
-ParenthesesRValue .RValue ::= "(" RValue ")";
-OperatorRValue    .RValue ::= Operation;
+ImplicitRValue        .RValue ::= LValue;
+ConstantRValue        .RValue ::= Constant;
+ParenthesesRValue     .RValue ::= "(" RValue ")";
+OperationResultRValue .RValue ::= Operation;
 
 separator FunctionArgumentValue ",";
 StdFunctionArgumentValue.FunctionArgumentValue ::= RValue;
@@ -237,7 +237,9 @@ coercions Operation 15;
 // namespaces and optionally templated typename fragments.)
 // ------------------------------------------------------------------
 separator nonempty QualifiedNameSegment "::";
-StdQualifiedName.QualifiedName ::= [QualifiedNameSegment];
+StdQualifiedName .QualifiedName ::= [QualifiedNameSegment];
+GlobalNamespace  .Namespace     ::= Identifier;
+NestedNamespace  .Namespace     ::= Namespace "::" Identifier;
 // ------------------------------------------------------------------
 
 
