@@ -28,8 +28,8 @@ comment "#";
 // ------------------------------------------------------------------
 // A program is a definition list of arbitrary length.
 // ------------------------------------------------------------------
-StdProgram.Program ::= [Definition];
 terminator Definition "";
+StdProgram.Program ::= [Definition];
 // ------------------------------------------------------------------
 
 
@@ -41,15 +41,15 @@ terminator Definition "";
 //		- variable declarations
 //		- (inline) function declarations & definitions
 // ------------------------------------------------------------------
-UsingTypeDefinition.Definition                 ::= "using" QualifiedName ";";
-UsingNamespaceDefinition.Definition            ::= "using" "namespace" QualifiedName ";";
-TypedefDefinition.Definition                   ::= Typedef ";";
-StructDefinition.Definition                    ::= Struct ";";
-VariableDeclarationListDefinition.Definition   ::= VariableDeclarationList ";";
-FunctionDeclarationDefinition.Definition       ::= FunctionDeclaration ";";
-FunctionDefinition.Definition                  ::= FunctionDeclaration Block;
-InlineFunctionDeclarationDefinition.Definition ::= "inline" FunctionDeclaration ";";
-InlineFunctionDefinition.Definition            ::= "inline" FunctionDeclaration Block;
+UsingTypeDefinition                 .Definition ::= "using" QualifiedName ";";
+UsingNamespaceDefinition            .Definition ::= "using" "namespace" QualifiedName ";";
+TypedefDefinition                   .Definition ::= Typedef ";";
+StructDefinition                    .Definition ::= Struct ";";
+VariableDeclarationListDefinition   .Definition ::= VariableDeclarationList ";";
+FunctionDeclarationDefinition       .Definition ::= FunctionDeclaration ";";
+FunctionDefinition                  .Definition ::= FunctionDeclaration Block;
+InlineFunctionDeclarationDefinition .Definition ::= "inline" FunctionDeclaration ";";
+InlineFunctionDefinition            .Definition ::= "inline" FunctionDeclaration Block;
 // ------------------------------------------------------------------
 
 
@@ -57,18 +57,17 @@ InlineFunctionDefinition.Definition            ::= "inline" FunctionDeclaration 
 // ------------------------------------------------------------------
 // Function signature.
 // ------------------------------------------------------------------
-separator ArgumentDeclaration ",";
-PrimitiveReturnFunctionDeclaration.FunctionDeclaration ::= DerivedPrimitiveType Identifier "(" [ArgumentDeclaration] ")";
-QualifiedReturnFunctionDeclaration.FunctionDeclaration ::= DerivedQualifiedType Identifier "(" [ArgumentDeclaration] ")";
+separator FunctionArgument ",";
+PrimitiveReturnFunctionDeclaration .FunctionDeclaration ::= DerivedPrimitiveType Identifier "(" [FunctionArgument] ")";
+QualifiedReturnFunctionDeclaration .FunctionDeclaration ::= DerivedQualifiedType Identifier "(" [FunctionArgument] ")";
 
-// Argument declaration types. (simple, unnamed or w/ default value.)
-PrimitiveTypeArgumentDeclaration.ArgumentDeclaration ::= DerivedPrimitiveType ArgumentName;
-QualifiedTypeArgumentDeclaration.ArgumentDeclaration ::= DerivedQualifiedType ArgumentName;
-
-StdArgumentName.ArgumentName                   ::= Identifier ArgumentDefaultValue;
-EmptyArgumentName.ArgumentName                 ::= ;
-StdArgumentDefaultValue.ArgumentDefaultValue   ::= "=" RValue;
-EmptyArgumentDefaultValue.ArgumentDefaultValue ::= ;
+// Argument declaration types. (simple, anonymous or w/ default value.)
+PrimitiveTypeUnnamedArgument .FunctionArgument ::= DerivedPrimitiveType;
+PrimitiveTypeArgument        .FunctionArgument ::= DerivedPrimitiveType Identifier;
+PrimitiveTypeDefaultArgument .FunctionArgument ::= DerivedPrimitiveType Identifier "=" RValue;
+QualifiedTypeUnnamedArgument .FunctionArgument ::= DerivedQualifiedType;
+QualifiedTypeArgument        .FunctionArgument ::= DerivedQualifiedType Identifier;
+QualifiedTypeDefaultArgument .FunctionArgument ::= DerivedQualifiedType Identifier "=" RValue;
 // ------------------------------------------------------------------
 
 
@@ -76,8 +75,8 @@ EmptyArgumentDefaultValue.ArgumentDefaultValue ::= ;
 // ------------------------------------------------------------------
 // Typedefs can be statements as well as definitions.
 // ------------------------------------------------------------------
-PrimitiveTypedef.Typedef ::= "typedef" DerivedPrimitiveType Identifier;
-QualifiedTypedef.Typedef ::= "typedef" DerivedQualifiedType Identifier;
+PrimitiveTypedef .Typedef ::= "typedef" DerivedPrimitiveType Identifier;
+QualifiedTypedef .Typedef ::= "typedef" DerivedQualifiedType Identifier;
 // ------------------------------------------------------------------
 
 
@@ -86,28 +85,27 @@ QualifiedTypedef.Typedef ::= "typedef" DerivedQualifiedType Identifier;
 // Variable declarations may optionally initialize the variable.
 // ------------------------------------------------------------------
 separator nonempty VariableDeclaration ",";
-PrimitiveTypeVariableDeclarationList.VariableDeclarationList ::= DerivedPrimitiveType [VariableDeclaration];
-QualifiedTypeVariableDeclarationList.VariableDeclarationList ::= DerivedQualifiedType [VariableDeclaration];
+PrimitiveTypeVariableDeclarationList .VariableDeclarationList ::= DerivedPrimitiveType [VariableDeclaration];
+QualifiedTypeVariableDeclarationList .VariableDeclarationList ::= DerivedQualifiedType [VariableDeclaration];
+StdVariableDeclaration               .VariableDeclaration     ::= Identifier;
+AssignmentVariableDefinition         .VariableDeclaration     ::= Identifier "=" RValue;
 
-StdVariableDeclaration.VariableDeclaration   ::= Identifier VariableInitializer;
-EmptyVariableInitializer.VariableInitializer ::= ;
-StdVariableInitializer.VariableInitializer   ::= "=" RValue;
+// Valid type names.
+StdPrimitive                         .DerivedPrimitiveType    ::= BuiltinPrimitive;
+StdQualifiedType                     .DerivedQualifiedType    ::= QualifiedName;
+ConstPrimitive                       .DerivedPrimitiveType    ::= "const" BuiltinPrimitive;
+ConstQualifiedType                   .DerivedQualifiedType    ::= "const" QualifiedName;
+ExtendedPrimitive                    .DerivedPrimitiveType    ::= BuiltinPrimitive [TypeExtension];
+ExtendedQualifiedType                .DerivedQualifiedType    ::= QualifiedName    [TypeExtension];
+ConstExtendedPrimitive               .DerivedPrimitiveType    ::= "const" BuiltinPrimitive [TypeExtension];
+ConstExtendedQualifiedType           .DerivedQualifiedType    ::= "const" QualifiedName    [TypeExtension];
 
+// Types may be extended by an arbitrary number of these tokens.
 separator nonempty TypeExtension "";
-StdPrimitive.DerivedPrimitiveType     ::= BuiltinPrimitive;
-StdQualifiedType.DerivedQualifiedType ::= QualifiedName;
-
-ConstPrimitive.DerivedPrimitiveType     ::= "const" BuiltinPrimitive;
-ConstQualifiedType.DerivedQualifiedType ::= "const" QualifiedName;
-
-ExtendedPrimitive.DerivedPrimitiveType     ::= BuiltinPrimitive [TypeExtension];
-ExtendedQualifiedType.DerivedQualifiedType ::= QualifiedName [TypeExtension];
-
-ConstExtendedPrimitive.DerivedPrimitiveType     ::= "const" BuiltinPrimitive [TypeExtension];
-ConstExtendedQualifiedType.DerivedQualifiedType ::= "const" QualifiedName [TypeExtension];
-
-PointerTypeExtension.TypeExtension   ::= "*";
-ReferenceTypeExtension.TypeExtension ::= "&";
+PointerTypeExtension        .TypeExtension ::= "*";
+ReferenceTypeExtension      .TypeExtension ::= "&";
+ConstPointerTypeExtension   .TypeExtension ::= "const" "*";
+ConstReferenceTypeExtension .TypeExtension ::= "const" "&";
 // ------------------------------------------------------------------
 
 
@@ -133,19 +131,19 @@ StdBlock.Block ::= "{" [Statement] "}";
 // Statement types.
 // ------------------------------------------------------------------
 terminator Statement "";
-EmptyStatement.Statement                   ::= ";";
-BlockStatement.Statement                   ::= Block;
-StructStatement.Statement                  ::= Struct ";";
-VariableDeclarationListStatement.Statement ::= VariableDeclarationList ";";
-RValueStatement.Statement                  ::= RValue ";";
-ReturnStatement.Statement                  ::= "return" RValue ";";
-ThrowStatement.Statement                   ::= "throw" RValue ";";
-TypedefStatement.Statement                 ::= Typedef ";";
-IfStatement.Statement                      ::= "if" "(" RValue ")" Statement;
-IfElseStatement.Statement                  ::= "if" "(" RValue ")" Statement "else" Statement;
-WhileLoopStatement.Statement               ::= "while" "(" RValue ")" Statement;
-DoWhileLoopStatement.Statement             ::= "do" Statement "while" "(" RValue ")";
-ForLoopStatement.Statement                 ::= "for" "(" VariableDeclarationList ";" RValue ";" RValue ")" Statement;
+EmptyStatement               .Statement ::= ";";
+BlockStatement               .Statement ::= Block;
+StructStatement              .Statement ::= Struct ";";
+VariableDeclarationStatement .Statement ::= VariableDeclarationList ";";
+RValueStatement              .Statement ::= RValue ";";
+ReturnStatement              .Statement ::= "return" RValue ";";
+ThrowStatement               .Statement ::= "throw" RValue ";";
+TypedefStatement             .Statement ::= Typedef ";";
+IfStatement                  .Statement ::= "if" "(" RValue ")" Statement;
+IfElseStatement              .Statement ::= "if" "(" RValue ")" Statement "else" Statement;
+WhileLoopStatement           .Statement ::= "while" "(" RValue ")" Statement;
+DoWhileLoopStatement         .Statement ::= "do" Statement "while" "(" RValue ")";
+ForLoopStatement             .Statement ::= "for" "(" VariableDeclarationList ";" RValue ";" RValue ")" Statement;
 // ------------------------------------------------------------------
 
 
@@ -153,19 +151,18 @@ ForLoopStatement.Statement                 ::= "for" "(" VariableDeclarationList
 // ------------------------------------------------------------------
 // LValues can be variables or dereferences.
 // ------------------------------------------------------------------
-VariableLValue.LValue  ::= QualifiedName;
-DerefenceLValue.LValue ::= Dereference;
+VariableLValue    .LValue ::= QualifiedName;
+MemberAccssLValue .LValue ::= MemberAccess;
 // ------------------------------------------------------------------
 
 
 
 // ------------------------------------------------------------------
-// Dereferences of struct instances (by pointer / value semantics)
-// and array members.
+// Access members of struct instances and arrays.
 // ------------------------------------------------------------------
-StructDereference.Dereference  ::= RValue "." Identifier;
-PointerDereference.Dereference ::= RValue "->" Identifier;
-ArrayDereference.Dereference   ::= RValue "[" RValue "]";
+DotMemberAccess   .MemberAccess ::= RValue "." Identifier;
+ArrowMemberAccess .MemberAccess ::= RValue "->" Identifier;
+ArrayMemberAccess .MemberAccess ::= RValue "[" RValue "]";
 // ------------------------------------------------------------------
 
 
@@ -173,12 +170,13 @@ ArrayDereference.Dereference   ::= RValue "[" RValue "]";
 // ------------------------------------------------------------------
 // Basic RValue types.
 // ------------------------------------------------------------------
-ImplicitRValue         .RValue ::= LValue;
-ConstantRValue         .RValue ::= Constant;
-ParenthesesRValue      .RValue ::= "(" RValue ")";
-OperatorRValue         .RValue ::= Operation;
-separator               FunctionArgument ",";
-StdFunctionArgument    .FunctionArgument ::= RValue;
+ImplicitRValue    .RValue ::= LValue;
+ConstantRValue    .RValue ::= Constant;
+ParenthesesRValue .RValue ::= "(" RValue ")";
+OperatorRValue    .RValue ::= Operation;
+
+separator FunctionArgumentValue ",";
+StdFunctionArgumentValue.FunctionArgumentValue ::= RValue;
 // ------------------------------------------------------------------
 
 
@@ -186,59 +184,47 @@ StdFunctionArgument    .FunctionArgument ::= RValue;
 // ------------------------------------------------------------------
 // RValues can be the result of operations.
 // ------------------------------------------------------------------
-
-FuncCallBinaryOperation    .Operation15 ::= RValue "(" [FunctionArgument] ")";
-
+FuncCallBinaryOperation    .Operation15 ::= RValue "(" [FunctionArgumentValue] ")";
 PreIncUnaryOperation       .Operation14 ::= "++" RValue;
 PreDecUnaryOperation       .Operation14 ::= "--" RValue;
-
 PostIncUnaryOperation      .Operation13 ::= RValue "++";
 PostDecUnaryOperation      .Operation13 ::= RValue "--";
-
 PositiveUnaryOperation     .Operation12 ::= "+" RValue;
 NegativeUnaryOperation     .Operation12 ::= "-" RValue;
 NotUnaryOperation          .Operation12 ::= "!" RValue;
 InvertUnaryOperation       .Operation12 ::= "~" RValue;
 DeRefUnaryOperation        .Operation12 ::= "*" RValue;
 RefUnaryOperation          .Operation12 ::= "&" RValue;
-
 MulBinaryOperation         .Operation11 ::= RValue "*" RValue;
 DivBinaryOperation         .Operation11 ::= RValue "/" RValue;
 ModBinaryOperation         .Operation11 ::= RValue "%" RValue;
-
 AddBinaryOperation         .Operation10 ::= RValue "+" RValue;
 SubBinaryOperation         .Operation10 ::= RValue "-" RValue;
-
-LShiftBinaryOperation      .Operation9 ::= RValue "<<" RValue;
-RShiftBinaryOperation      .Operation9 ::= RValue ">>" RValue;
-
-GrBinaryOperation          .Operation8 ::= RValue ">" RValue;
-GrEqBinaryOperation        .Operation8 ::= RValue ">=" RValue;
-LsBinaryOperation          .Operation8 ::= RValue "<" RValue;
-LsEqBinaryOperation        .Operation8 ::= RValue "<=" RValue;
-
-EqBinaryOperation          .Operation7 ::= RValue "==" RValue;
-NotEqBinaryOperation       .Operation7 ::= RValue "!=" RValue;
-
-AndBitBinaryOperation      .Operation6 ::= RValue "&" RValue;
-XorBitBinaryOperation      .Operation5 ::= RValue "^" RValue;
-OrBitBinaryOperation       .Operation4 ::= RValue "|" RValue;
-
-AndBinaryOperation         .Operation3 ::= RValue "&&" RValue;
+LShiftBinaryOperation      .Operation9  ::= RValue "<<" RValue;
+RShiftBinaryOperation      .Operation9  ::= RValue ">>" RValue;
+GrBinaryOperation          .Operation8  ::= RValue ">" RValue;
+GrEqBinaryOperation        .Operation8  ::= RValue ">=" RValue;
+LsBinaryOperation          .Operation8  ::= RValue "<" RValue;
+LsEqBinaryOperation        .Operation8  ::= RValue "<=" RValue;
+EqBinaryOperation          .Operation7  ::= RValue "==" RValue;
+NotEqBinaryOperation       .Operation7  ::= RValue "!=" RValue;
+AndBitBinaryOperation      .Operation6  ::= RValue "&" RValue;
+XorBitBinaryOperation      .Operation5  ::= RValue "^" RValue;
+OrBitBinaryOperation       .Operation4  ::= RValue "|" RValue;
+AndBinaryOperation         .Operation3  ::= RValue "&&" RValue;
 OrBinaryOperation          .Operation2  ::= RValue "||" RValue;
-
-StdTernaryOperation        .Operation1 ::= RValue "?" RValue ":" RValue;
-StdAssignmentOperation     .Operation1 ::= LValue "=" RValue;
-AddAssignmentOperation     .Operation1 ::= LValue "+=" RValue;
-SubAssignmentOperation     .Operation1 ::= LValue "-=" RValue;
-MulAssignmentOperation     .Operation1 ::= LValue "*=" RValue;
-DivAssignmentOperation     .Operation1 ::= LValue "/=" RValue;
-ModAssignmentOperation     .Operation1 ::= LValue "%=" RValue;
-LShiftAssignmentOperation  .Operation1 ::= LValue "<<=" RValue;
-RShiftAssignmentOperation  .Operation1 ::= LValue ">>=" RValue;
-AndBitAssignmentOperation  .Operation1 ::= LValue "&=" RValue;
-XorBitAssignmentOperation  .Operation1 ::= LValue "^=" RValue;
-OrBitAssignmentOperation   .Operation1 ::= LValue "|=" RValue;
+StdTernaryOperation        .Operation1  ::= RValue "?" RValue ":" RValue;
+StdAssignmentOperation     .Operation1  ::= LValue "=" RValue;
+AddAssignmentOperation     .Operation1  ::= LValue "+=" RValue;
+SubAssignmentOperation     .Operation1  ::= LValue "-=" RValue;
+MulAssignmentOperation     .Operation1  ::= LValue "*=" RValue;
+DivAssignmentOperation     .Operation1  ::= LValue "/=" RValue;
+ModAssignmentOperation     .Operation1  ::= LValue "%=" RValue;
+LShiftAssignmentOperation  .Operation1  ::= LValue "<<=" RValue;
+RShiftAssignmentOperation  .Operation1  ::= LValue ">>=" RValue;
+AndBitAssignmentOperation  .Operation1  ::= LValue "&=" RValue;
+XorBitAssignmentOperation  .Operation1  ::= LValue "^=" RValue;
+OrBitAssignmentOperation   .Operation1  ::= LValue "|=" RValue;
 
 coercions Operation 15;
 // ------------------------------------------------------------------
@@ -246,9 +232,9 @@ coercions Operation 15;
 
 
 // ------------------------------------------------------------------
-// Item names denote valid identifiers to access variables
+// Qualified names denote valid identifiers to access variables
 // and functions. (They may be nested arbitrarily deeply inside
-// scopes.)
+// namespaces and optionally templated typename fragments.)
 // ------------------------------------------------------------------
 separator nonempty QualifiedNameSegment "::";
 StdQualifiedName.QualifiedName ::= [QualifiedNameSegment];
@@ -260,13 +246,12 @@ StdQualifiedName.QualifiedName ::= [QualifiedNameSegment];
 // Templates.
 // ------------------------------------------------------------------
 separator nonempty TemplateParameter ",";
-StdQualifiedNameSegment.QualifiedNameSegment      ::= Identifier;
-TemplateQualifiedNameSegment.QualifiedNameSegment ::= Identifier "<" [TemplateParameter] ">";
-ConstantTemplateParameter.TemplateParameter       ::= Constant;
-TypenameTemplateParameter.TemplateParameter       ::= TypeTemplateParameter;
-
-PrimitiveTypeTemplateParameter.TypeTemplateParameter ::= DerivedPrimitiveType;
-QualifiedTypeTemplateParameter.TypeTemplateParameter ::= DerivedQualifiedType;
+StdQualifiedNameSegment        .QualifiedNameSegment ::= Identifier;
+TemplateQualifiedNameSegment   .QualifiedNameSegment ::= Identifier "<" [TemplateParameter] ">";
+ConstantTemplateParameter      .TemplateParameter    ::= Constant;
+TypenameTemplateParameter      .TemplateParameter    ::= TypenameParameter;
+PrimitiveTypeTemplateParameter .TypenameParameter    ::= DerivedPrimitiveType;
+QualifiedTypeTemplateParameter .TypenameParameter    ::= DerivedQualifiedType;
 // ------------------------------------------------------------------
 
 
@@ -275,12 +260,12 @@ QualifiedTypeTemplateParameter.TypeTemplateParameter ::= DerivedQualifiedType;
 // Constant values.
 // ------------------------------------------------------------------
 separator String "";
-IntConstant.Constant    ::= Integer;
-StringConstant.Constant ::= [String] String;
-DoubleConstant.Constant ::= Double;
-CharConstant.Constant   ::= Char;
-TrueConstant.Constant   ::= "true";
-FalseConstant.Constant  ::= "false";
+IntConstant    .Constant ::= Integer;
+StringConstant .Constant ::= [String] String;
+DoubleConstant .Constant ::= Double;
+CharConstant   .Constant ::= Char;
+TrueConstant   .Constant ::= "true";
+FalseConstant  .Constant ::= "false";
 // ------------------------------------------------------------------
 
 
@@ -288,16 +273,16 @@ FalseConstant.Constant  ::= "false";
 // ------------------------------------------------------------------
 // Builtin primitive types.
 // ------------------------------------------------------------------
-VoidPrimitiveDatatype.BuiltinPrimitive        ::= "void";
-BoolPrimitiveDatatype.BuiltinPrimitive        ::= "bool";
-CharPrimitiveDatatype.BuiltinPrimitive        ::= "char";
-ShortIntPrimitiveDatatype.BuiltinPrimitive    ::= "short" "int";
-IntPrimitiveDatatype.BuiltinPrimitive         ::= "int";
-LongIntPrimitiveDatatype.BuiltinPrimitive     ::= "long" "int";
-LongLongIntPrimitiveDatatype.BuiltinPrimitive ::= "long" "long" "int";
-FloatPrimitiveDatatype.BuiltinPrimitive       ::= "float";
-DoublePrimitiveDatatype.BuiltinPrimitive      ::= "double";
-LongDoublePrimitiveDatatype.BuiltinPrimitive  ::= "long" "double";
+VoidPrimitiveDatatype        .BuiltinPrimitive ::= "void";
+BoolPrimitiveDatatype        .BuiltinPrimitive ::= "bool";
+CharPrimitiveDatatype        .BuiltinPrimitive ::= "char";
+ShortIntPrimitiveDatatype    .BuiltinPrimitive ::= "short" "int";
+IntPrimitiveDatatype         .BuiltinPrimitive ::= "int";
+LongIntPrimitiveDatatype     .BuiltinPrimitive ::= "long" "int";
+LongLongIntPrimitiveDatatype .BuiltinPrimitive ::= "long" "long" "int";
+FloatPrimitiveDatatype       .BuiltinPrimitive ::= "float";
+DoublePrimitiveDatatype      .BuiltinPrimitive ::= "double";
+LongDoublePrimitiveDatatype  .BuiltinPrimitive ::= "long" "double";
 // ------------------------------------------------------------------
 
 
