@@ -58,17 +58,17 @@ InlineFunctionDefinition.Definition            ::= "inline" FunctionDeclaration 
 // Function signature.
 // ------------------------------------------------------------------
 separator ArgumentDeclaration ",";
-FDA.FunctionDeclaration ::= ConstModifier BuiltinPrimitive [TypeModifier] Identifier "(" [ArgumentDeclaration] ")";
-FDB.FunctionDeclaration ::= ConstModifier QualifiedName    [TypeModifier] Identifier "(" [ArgumentDeclaration] ")";
+PrimitiveReturnFunctionDeclaration.FunctionDeclaration ::= DerivedPrimitiveType Identifier "(" [ArgumentDeclaration] ")";
+QualifiedReturnFunctionDeclaration.FunctionDeclaration ::= DerivedQualifiedType Identifier "(" [ArgumentDeclaration] ")";
 
 // Argument declaration types. (simple, unnamed or w/ default value.)
-ADA.ArgumentDeclaration ::= ConstModifier BuiltinPrimitive [TypeModifier] ArgumentName;
-ADB.ArgumentDeclaration ::= ConstModifier QualifiedName    [TypeModifier] ArgumentName;
+PrimitiveTypeArgumentDeclaration.ArgumentDeclaration ::= DerivedPrimitiveType ArgumentName;
+QualifiedTypeArgumentDeclaration.ArgumentDeclaration ::= DerivedQualifiedType ArgumentName;
 
-StdArgumentName.ArgumentName         ::= Identifier ArgumentDefault;
-EmptyArgumentName.ArgumentName       ::= ;
-StdArgumentDefault.ArgumentDefault   ::= "=" RValue;
-EmptyArgumentDefault.ArgumentDefault ::= ;
+StdArgumentName.ArgumentName                   ::= Identifier ArgumentDefaultValue;
+EmptyArgumentName.ArgumentName                 ::= ;
+StdArgumentDefaultValue.ArgumentDefaultValue   ::= "=" RValue;
+EmptyArgumentDefaultValue.ArgumentDefaultValue ::= ;
 // ------------------------------------------------------------------
 
 
@@ -76,8 +76,8 @@ EmptyArgumentDefault.ArgumentDefault ::= ;
 // ------------------------------------------------------------------
 // Typedefs can be statements as well as definitions.
 // ------------------------------------------------------------------
-TypedefA.Typedef ::= "typedef" BuiltinPrimitive [TypeModifier] Identifier;
-TypedefB.Typedef ::= "typedef" QualifiedName    [TypeModifier] Identifier;
+PrimitiveTypedef.Typedef ::= "typedef" DerivedPrimitiveType Identifier;
+QualifiedTypedef.Typedef ::= "typedef" DerivedQualifiedType Identifier;
 // ------------------------------------------------------------------
 
 
@@ -87,17 +87,20 @@ TypedefB.Typedef ::= "typedef" QualifiedName    [TypeModifier] Identifier;
 // ------------------------------------------------------------------
 separator nonempty VariableDeclaration ",";
 separator TypeModifier "";
-VariableDeclarationListA.VariableDeclarationList ::= ConstModifier BuiltinPrimitive [TypeModifier] [VariableDeclaration];
-VariableDeclarationListC.VariableDeclarationList ::= ConstModifier QualifiedName    [TypeModifier] [VariableDeclaration];
+PrimitiveTypeVariableDeclarationList.VariableDeclarationList ::= DerivedPrimitiveType [VariableDeclaration];
+QualifiedTypeVariableDeclarationList.VariableDeclarationList ::= DerivedQualifiedType [VariableDeclaration];
 
-UninitializedVariableDeclaration.VariableDeclaration ::= Identifier;
-InitializedVariableDeclaration.VariableDeclaration   ::= Identifier "=" RValue;
+StdVariableDeclaration.VariableDeclaration   ::= Identifier VariableInitializer;
+EmptyVariableInitializer.VariableInitializer ::= ;
+StdVariableInitializer.VariableInitializer   ::= "=" RValue;
 
 EmptyConstModifier.ConstModifier   ::= ;
 StdConstModifier.ConstModifier     ::= "const";
-
+EmptyTypeModifier.TypeModifier     ::= ;
 ReferenceTypeModifier.TypeModifier ::= "&";
-PointerTypeModifier.TypeModifier   ::= "*";
+PointerTypeModifier.TypeModifier   ::= "*" TypeModifier;
+StdDerivedPrimitiveType.DerivedPrimitiveType ::= ConstModifier BuiltinPrimitive TypeModifier;
+StdDerivedQualifiedType.DerivedQualifiedType ::= ConstModifier QualifiedName    TypeModifier;
 // ------------------------------------------------------------------
 
 
@@ -124,10 +127,10 @@ StdBlock.Block ::= "{" [Statement] "}";
 // ------------------------------------------------------------------
 terminator Statement "";
 EmptyStatement.Statement                   ::= ";";
-RValueStatement.Statement                  ::= RValue ";";
 BlockStatement.Statement                   ::= Block;
 StructStatement.Statement                  ::= Struct ";";
 VariableDeclarationListStatement.Statement ::= VariableDeclarationList ";";
+RValueStatement.Statement                  ::= RValue ";";
 ReturnStatement.Statement                  ::= "return" RValue ";";
 ThrowStatement.Statement                   ::= "throw" RValue ";";
 TypedefStatement.Statement                 ::= Typedef ";";
@@ -135,7 +138,7 @@ IfStatement.Statement                      ::= "if" "(" RValue ")" Statement;
 IfElseStatement.Statement                  ::= "if" "(" RValue ")" Statement "else" Statement;
 WhileLoopStatement.Statement               ::= "while" "(" RValue ")" Statement;
 DoWhileLoopStatement.Statement             ::= "do" Statement "while" "(" RValue ")";
-ForLoopStatement.Statement                 ::= "for" "(" VariableDeclarationList ";" RValue ";" RValue ")" Statement;
+ForLoopStatement.Statement                 ::= "for" "(" VariableDeclarationList ";" RValue ";" Statement ")" Statement;
 // ------------------------------------------------------------------
 
 
@@ -176,61 +179,60 @@ StdFunctionArgument    .FunctionArgument ::= RValue;
 // ------------------------------------------------------------------
 // RValues can be the result of operations.
 // ------------------------------------------------------------------
-PostIncUnaryOperation      .Operation2 ::= RValue "++";
-PostDecUnaryOperation      .Operation2 ::= RValue "--";
-FuncCallBinaryOperation    .Operation2 ::= RValue "(" [FunctionArgument] ")";
-// SubscriptBinaryOperation   .Operation2 ::= RValue "[" RValue "]";
-// DotMemBinaryOperation      .Operation2 ::= RValue "." Identifier;
-// ArrowMemBinaryOperation    .Operation2 ::= RValue "->" Identifier;
 
-PreIncUnaryOperation       .Operation3 ::= "++" RValue;
-PreDecUnaryOperation       .Operation3 ::= "--" RValue;
-PositiveUnaryOperation     .Operation3 ::= "+" RValue;
-NegativeUnaryOperation     .Operation3 ::= "-" RValue;
-NotUnaryOperation          .Operation3 ::= "!" RValue;
-InvertUnaryOperation       .Operation3 ::= "~" RValue;
-DeRefUnaryOperation        .Operation3 ::= "*" RValue;
-RefUnaryOperation          .Operation3 ::= "&" RValue;
+FuncCallBinaryOperation    .Operation15 ::= RValue "(" [FunctionArgument] ")";
 
-MulBinaryOperation         .Operation5 ::= RValue "*" RValue;
-DivBinaryOperation         .Operation5 ::= RValue "/" RValue;
-ModBinaryOperation         .Operation5 ::= RValue "%" RValue;
+PreIncUnaryOperation       .Operation14 ::= "++" RValue;
+PreDecUnaryOperation       .Operation14 ::= "--" RValue;
 
-AddBinaryOperation         .Operation6 ::= RValue "+" RValue;
-SubBinaryOperation         .Operation6 ::= RValue "-" RValue;
+PostIncUnaryOperation      .Operation13 ::= RValue "++";
+PostDecUnaryOperation      .Operation13 ::= RValue "--";
 
-LShiftBinaryOperation      .Operation7 ::= RValue "<<" RValue;
-RShiftBinaryOperation      .Operation7 ::= RValue ">>" RValue;
+PositiveUnaryOperation     .Operation12 ::= "+" RValue;
+NegativeUnaryOperation     .Operation12 ::= "-" RValue;
+NotUnaryOperation          .Operation12 ::= "!" RValue;
+InvertUnaryOperation       .Operation12 ::= "~" RValue;
+DeRefUnaryOperation        .Operation12 ::= "*" RValue;
+RefUnaryOperation          .Operation12 ::= "&" RValue;
+
+MulBinaryOperation         .Operation11 ::= RValue "*" RValue;
+DivBinaryOperation         .Operation11 ::= RValue "/" RValue;
+ModBinaryOperation         .Operation11 ::= RValue "%" RValue;
+
+AddBinaryOperation         .Operation10 ::= RValue "+" RValue;
+SubBinaryOperation         .Operation10 ::= RValue "-" RValue;
+
+LShiftBinaryOperation      .Operation9 ::= RValue "<<" RValue;
+RShiftBinaryOperation      .Operation9 ::= RValue ">>" RValue;
 
 GrBinaryOperation          .Operation8 ::= RValue ">" RValue;
 GrEqBinaryOperation        .Operation8 ::= RValue ">=" RValue;
 LsBinaryOperation          .Operation8 ::= RValue "<" RValue;
 LsEqBinaryOperation        .Operation8 ::= RValue "<=" RValue;
 
-EqBinaryOperation          .Operation9 ::= RValue "==" RValue;
-NotEqBinaryOperation       .Operation9 ::= RValue "!=" RValue;
+EqBinaryOperation          .Operation7 ::= RValue "==" RValue;
+NotEqBinaryOperation       .Operation7 ::= RValue "!=" RValue;
 
-AndBitBinaryOperation      .Operation10 ::= RValue "&" RValue;
-XorBitBinaryOperation      .Operation11 ::= RValue "^" RValue;
-OrBitBinaryOperation       .Operation12 ::= RValue "|" RValue;
+AndBitBinaryOperation      .Operation6 ::= RValue "&" RValue;
+XorBitBinaryOperation      .Operation5 ::= RValue "^" RValue;
+OrBitBinaryOperation       .Operation4 ::= RValue "|" RValue;
 
-AndBinaryOperation         .Operation13 ::= RValue "&&" RValue;
-OrBinaryOperation          .Operation14 ::= RValue "||" RValue;
+AndBinaryOperation         .Operation3 ::= RValue "&&" RValue;
+OrBinaryOperation          .Operation2  ::= RValue "||" RValue;
 
-StdTernaryOperation        .Operation15 ::= RValue "?" RValue ":" RValue;
-StdAssignmentOperation     .Operation15 ::= LValue "=" RValue;
-AddAssignmentOperation     .Operation15 ::= LValue "+=" RValue;
-SubAssignmentOperation     .Operation15 ::= LValue "-=" RValue;
-MulAssignmentOperation     .Operation15 ::= LValue "*=" RValue;
-DivAssignmentOperation     .Operation15 ::= LValue "/=" RValue;
-ModAssignmentOperation     .Operation15 ::= LValue "%=" RValue;
-LShiftAssignmentOperation  .Operation15 ::= LValue "<<=" RValue;
-RShiftAssignmentOperation  .Operation15 ::= LValue ">>=" RValue;
-AndBitAssignmentOperation  .Operation15 ::= LValue "&=" RValue;
-XorBitAssignmentOperation  .Operation15 ::= LValue "^=" RValue;
-OrBitAssignmentOperation   .Operation15 ::= LValue "|=" RValue;
+StdTernaryOperation        .Operation1 ::= RValue "?" RValue ":" RValue;
+StdAssignmentOperation     .Operation1 ::= LValue "=" RValue;
+AddAssignmentOperation     .Operation1 ::= LValue "+=" RValue;
+SubAssignmentOperation     .Operation1 ::= LValue "-=" RValue;
+MulAssignmentOperation     .Operation1 ::= LValue "*=" RValue;
+DivAssignmentOperation     .Operation1 ::= LValue "/=" RValue;
+ModAssignmentOperation     .Operation1 ::= LValue "%=" RValue;
+LShiftAssignmentOperation  .Operation1 ::= LValue "<<=" RValue;
+RShiftAssignmentOperation  .Operation1 ::= LValue ">>=" RValue;
+AndBitAssignmentOperation  .Operation1 ::= LValue "&=" RValue;
+XorBitAssignmentOperation  .Operation1 ::= LValue "^=" RValue;
+OrBitAssignmentOperation   .Operation1 ::= LValue "|=" RValue;
 
-// CommaBinaryOperation       .Operation16 ::= RValue "," RValue;
 coercions Operation 15;
 // ------------------------------------------------------------------
 
@@ -256,8 +258,8 @@ TemplateQualifiedNameSegment.QualifiedNameSegment ::= Identifier "<" [TemplatePa
 ConstantTemplateParameter.TemplateParameter       ::= Constant;
 TypenameTemplateParameter.TemplateParameter       ::= TypeTemplateParameter;
 
-PrimitiveTypeTemplateParameter.TypeTemplateParameter ::= ConstModifier BuiltinPrimitive [TypeModifier];
-QualifiedTypeTemplateParameter.TypeTemplateParameter ::= ConstModifier QualifiedName    [TypeModifier]; 
+PrimitiveTypeTemplateParameter.TypeTemplateParameter ::= DerivedPrimitiveType;
+QualifiedTypeTemplateParameter.TypeTemplateParameter ::= DerivedQualifiedType;
 // ------------------------------------------------------------------
 
 
