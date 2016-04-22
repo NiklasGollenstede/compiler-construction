@@ -41,8 +41,8 @@ terminator Definition "";
 //		- variable declarations
 //		- (inline) function declarations & definitions
 // ------------------------------------------------------------------
-UsingTypeDefinition.Definition                 ::= "using" QualifiedName ";";
-UsingNamespaceDefinition.Definition            ::= "using" "namespace" QualifiedName ";";
+UsingTypeDefinition.Definition                 ::= "using" BaseDatatype ";";
+UsingNamespaceDefinition.Definition            ::= "using" "namespace" NamespaceName ";";
 TypedefDefinition.Definition                   ::= Typedef ";";
 StructDefinition.Definition                    ::= Struct ";";
 VariableDeclarationListDefinition.Definition   ::= VariableDeclarationList ";";
@@ -58,17 +58,14 @@ InlineFunctionDefinition.Definition            ::= "inline" FunctionDeclaration 
 // Function signature.
 // ------------------------------------------------------------------
 separator ArgumentDeclaration ",";
-FDA.FunctionDeclaration ::= ConstModifier BuiltinPrimitive [TypeModifier] Identifier "(" [ArgumentDeclaration] ")";
-FDB.FunctionDeclaration ::= ConstModifier QualifiedName    [TypeModifier] Identifier "(" [ArgumentDeclaration] ")";
+StdFunctionDeclaration.FunctionDeclaration ::= Datatype Identifier "(" [ArgumentDeclaration] ")";
 
 // Argument declaration types. (simple, unnamed or w/ default value.)
-ADA.ArgumentDeclaration ::= ConstModifier BuiltinPrimitive [TypeModifier] ArgumentName;
-ADB.ArgumentDeclaration ::= ConstModifier QualifiedName    [TypeModifier] ArgumentName;
-
-StdArgumentName.ArgumentName         ::= Identifier ArgumentDefault;
-EmptyArgumentName.ArgumentName       ::= ;
-StdArgumentDefault.ArgumentDefault   ::= "=" RValue;
-EmptyArgumentDefault.ArgumentDefault ::= ;
+StdArgumentDeclaration.ArgumentDeclaration         ::= Datatype ArgumentName;
+StdArgumentName.ArgumentName                       ::= Identifier ArgumentInitialization;
+EmptyArgumentName.ArgumentName                     ::= ;
+StdArgumentInitialization.ArgumentInitialization   ::= "=" RValue;
+EmptyArgumentInitialization.ArgumentInitialization ::= ;
 // ------------------------------------------------------------------
 
 
@@ -76,8 +73,7 @@ EmptyArgumentDefault.ArgumentDefault ::= ;
 // ------------------------------------------------------------------
 // Typedefs can be statements as well as definitions.
 // ------------------------------------------------------------------
-TypedefA.Typedef ::= "typedef" BuiltinPrimitive [TypeModifier] Identifier;
-TypedefB.Typedef ::= "typedef" QualifiedName    [TypeModifier] Identifier;
+StdTypedef.Typedef ::= "typedef" Datatype Identifier;
 // ------------------------------------------------------------------
 
 
@@ -86,18 +82,9 @@ TypedefB.Typedef ::= "typedef" QualifiedName    [TypeModifier] Identifier;
 // Variable declarations may optionally initialize the variable.
 // ------------------------------------------------------------------
 separator nonempty VariableDeclaration ",";
-separator TypeModifier "";
-VariableDeclarationListA.VariableDeclarationList ::= ConstModifier BuiltinPrimitive [TypeModifier] [VariableDeclaration];
-VariableDeclarationListC.VariableDeclarationList ::= ConstModifier QualifiedName    [TypeModifier] [VariableDeclaration];
-
+StdVariableDeclarationList.VariableDeclarationList   ::= Datatype [VariableDeclaration];
 UninitializedVariableDeclaration.VariableDeclaration ::= Identifier;
 InitializedVariableDeclaration.VariableDeclaration   ::= Identifier "=" RValue;
-
-EmptyConstModifier.ConstModifier   ::= ;
-StdConstModifier.ConstModifier     ::= "const";
-
-ReferenceTypeModifier.TypeModifier ::= "&";
-PointerTypeModifier.TypeModifier   ::= "*";
 // ------------------------------------------------------------------
 
 
@@ -237,6 +224,34 @@ coercions Operation 15;
 
 
 // ------------------------------------------------------------------
+// Valid datatypes.
+// ------------------------------------------------------------------
+StdDatatype.Datatype       ::= BaseDatatype;
+ConstDatatype.Datatype     ::= "const" BaseDatatype;
+
+// References.
+ReferenceDatatype.Datatype ::= BaseDatatype "&";
+ConstReferenceDatatype.Datatype ::= "const" BaseDatatype "&";
+ReferenceConstDatatype.Datatype ::= BaseDatatype "const" "&";
+
+// Pointers.
+PointerDatatype.Datatype   ::= Datatype "*";
+ConstPointerDatatype.Datatype ::= "const" BaseDatatype "*";
+PointerConstDatatype.Datatype ::= BaseDatatype "const" "*";
+// ------------------------------------------------------------------
+
+
+
+// ------------------------------------------------------------------
+// Base datatypes.
+// ------------------------------------------------------------------
+PrimitiveBaseDatatype.BaseDatatype ::= BuiltinPrimitive;
+ComplexBaseDatatype.BaseDatatype   ::= QualifiedName;
+// ------------------------------------------------------------------
+
+
+
+// ------------------------------------------------------------------
 // Item names denote valid identifiers to access variables
 // and functions. (They may be nested arbitrarily deeply inside
 // scopes.)
@@ -250,14 +265,20 @@ StdQualifiedName.QualifiedName ::= [QualifiedNameSegment];
 // ------------------------------------------------------------------
 // Templates.
 // ------------------------------------------------------------------
-separator nonempty TemplateParameter ",";
+separator nonempty TemplateArgument ",";
 StdQualifiedNameSegment.QualifiedNameSegment      ::= Identifier;
-TemplateQualifiedNameSegment.QualifiedNameSegment ::= Identifier "<" [TemplateParameter] ">";
-ConstantTemplateParameter.TemplateParameter       ::= Constant;
-TypenameTemplateParameter.TemplateParameter       ::= TypeTemplateParameter;
+TemplateQualifiedNameSegment.QualifiedNameSegment ::= Identifier "<" [TemplateArgument] ">";
+ConstantTemplateArgument.TemplateArgument         ::= Constant;
+TypenameTemplateArgument.TemplateArgument         ::= Datatype;
+// ------------------------------------------------------------------
 
-PrimitiveTypeTemplateParameter.TypeTemplateParameter ::= ConstModifier BuiltinPrimitive [TypeModifier];
-QualifiedTypeTemplateParameter.TypeTemplateParameter ::= ConstModifier QualifiedName    [TypeModifier]; 
+
+
+// ------------------------------------------------------------------
+// Namespace names.
+// ------------------------------------------------------------------
+StdNamespaceName.NamespaceName    ::= Identifier;
+ScopedNamespaceName.NamespaceName ::= NamespaceName "::" Identifier;
 // ------------------------------------------------------------------
 
 
