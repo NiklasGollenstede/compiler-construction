@@ -3,57 +3,56 @@ IProgram.Program ::= [Def];
 separator Def "";
 
 // Function definitions.
-FunDef.Def ::= Typename QualIdent "(" [ArgDecl] ")" FunBody;
-InlFunDef.Def ::= "inline" Typename QualIdent "(" [ArgDecl] ")" FunBody;
+separator Stmt "";
+separator ArgDecl ",";
+FunDef.Def           ::= Typename Identifier "(" [ArgDecl] ")" FunBody;
+InlFunDef.Def        ::= "inline" Typename Identifier "(" [ArgDecl] ")" FunBody;
 EmptyFunBody.FunBody ::= ";";
-IFunBody.FunBody ::= "{" [Stmt] "}";
+IFunBody.FunBody     ::= "{" [Stmt] "}";
 
 // Typedefs.
-TypedefDef.Def ::= TypedefStmt;
+TypedefDef.Def ::= Typedef;
 
 // Using imports.
 UsingDef.Def ::= "using" QualIdent ";";
 
 // Struct definition.
-StructDef.Def ::= StructStmt;
+StructDef.Def ::= Struct;
 
 // Var declaration definition.
 VarDeclDef.Def ::= VarDecl;
 
 // Function arguments.
-separator ArgDecl ",";
-IArgDecl.ArgDecl ::= Typename ArgSpec;
+PrimitiveArgDecl.ArgDecl ::= Typename ArgSpec;
 EmptyArgSpec.ArgSpec ::= ;
-IArgSpec.ArgSpec ::= QualIdent ArgDefaultSpec;
+IArgSpec.ArgSpec ::= Identifier ArgDefaultSpec;
 EmptyArgDefaultSpec.ArgDefaultSpec ::= ;
-IArgDefaultSpec.ArgDefaultSpec ::= "=" Literal;
+IArgDefaultSpec.ArgDefaultSpec ::= "=" Expr;
 
 // Typenames.
+separator nonempty Typename ",";
 ConstTypename.Typename      ::= "const" Typename1;
 ReferenceTypename.Typename1 ::= Typename2 "&";
 PointerTypename.Typename1   ::= Typename2 "*";
 PrimitiveTypename.Typename2 ::= BuiltinPrimitive;
-UserTypename.Typename2 ::= QualIdent;
-coercions Typename 2;
+UserTypename.Typename2      ::= QualIdent;
+coercions Typename 2; 
 
 // Typedef statement.
-ITypedefStmt.TypedefStmt ::= "typedef" Typename QualIdent ";";
+ITypedef.Typedef ::= "typedef" Typename Identifier ";";
 
 // Struct definition.
-separator nonempty VarDecl "";
-EmptyStructStmt.StructStmt ::= "struct" Identifier "{" "}" ";";
-IStructStmt.StructStmt ::= "struct" Identifier "{" [VarDecl] "}" ";";
+separator VarDecl "";
+IStruct.Struct ::= "struct" Identifier "{" [VarDecl] "}" ";";
 
 // Variable declarations.
 separator nonempty VarDeclInit ",";
-IVarDecl.VarDecl ::= Typename [VarDeclInit] ";";
-IVarDeclInit.VarDeclInit ::= Identifier;
-InitVarDeclInit.VarDeclInit ::= Identifier "=" VarInitVal;
-LiteralVarInitVal.VarInitVal ::= Literal;
-IdentVarInitVal.VarInitVal ::= QualIdent;
+IVarDecl.VarDecl                 ::= Typename [VarDeclInit] ";";
+IVarDeclInit.VarDeclInit         ::= Identifier;
+InitVarDeclInit.VarDeclInit      ::= Identifier "=" VarInitVal;
+ExprVarInitVal.VarInitVal     ::= Expr;
 
 // Statements.
-separator Stmt "";
 NopStmt.Stmt ::= ";";
 BlockStmt.Stmt ::= "{" [Stmt] "}";
 VarDeclStmt.Stmt ::= VarDecl;
@@ -64,36 +63,43 @@ DoWhileStmt.Stmt ::= "do" Stmt "while" "(" Expr ")" ";";
 ForStmt.Stmt ::= "for" "(" VarDecl Expr ";" Expr ")" Stmt;
 IfStmt.Stmt ::= "if" "(" Expr ")" Stmt;
 IfElseStmt.Stmt ::= "if" "(" Expr ")" Stmt "else" Stmt;
+StructStmt.Stmt ::= Struct;
+TypedefStmt.Stmt ::= Typedef;
 
 // Expressions.
 separator Expr ",";
-LiteralExpr.Expr11 ::= Literal;
+LiteralExpr.Expr12 ::= Literal;
 
-VarExpr.Expr10 ::= QualIdent;
-IndexingExpr.Expr10 ::= Expr "[" Expr "]";
-CallExpr.Expr10 ::= Expr "(" [Expr] ")";
+VarExpr.Expr11 ::= QualIdent;
+IndexingExpr.Expr11 ::= Expr "[" Expr "]";
+CallExpr.Expr11 ::= Expr "(" [Expr] ")";
 
-DotAccExpr.Expr9 ::= Expr "." Identifier;
-ArrAccExpr.Expr9 ::= Expr "->" Identifier;
-DerefExpr.Expr9 ::= "*" Expr;
-PostIncExpr.Expr9 ::= Expr "++";
-PostDecExpr.Expr9 ::= Expr "--";
+DotAccExpr.Expr10 ::= Expr "." Identifier;
+ArrAccExpr.Expr10 ::= Expr "->" Identifier;
+DerefExpr.Expr10 ::= "*" Expr;
+PostIncExpr.Expr10 ::= Expr "++";
+PostDecExpr.Expr10 ::= Expr "--";
 
-PreIncExpr.Expr8 ::= "++" Expr;
-PreDecExpr.Expr8 ::= "--" Expr;
-NegateExpr.Expr8 ::= "!" Expr;
+PreIncExpr.Expr9 ::= "++" Expr;
+PreDecExpr.Expr9 ::= "--" Expr;
+NegateExpr.Expr9 ::= "!" Expr;
 
-MulExpr.Expr7 ::= Expr "*" Expr;
-DivExpr.Expr7 ::= Expr "/" Expr;
-ModExpr.Expr7 ::= Expr "%" Expr;
+MulExpr.Expr8 ::= Expr "*" Expr;
+DivExpr.Expr8 ::= Expr "/" Expr;
+ModExpr.Expr8 ::= Expr "%" Expr;
 
-AddExpr.Expr6 ::= Expr "+" Expr;
-SubExpr.Expr6 ::= Expr "-" Expr;
+AddExpr.Expr7 ::= Expr "+" Expr;
+SubExpr.Expr7 ::= Expr "-" Expr;
+
+LShiftExpr.Expr6 ::= Expr "<<" Expr;
+RShiftExpr.Expr6 ::= Expr ">>" Expr;
 
 LessExpr.Expr5 ::= Expr "<" Expr;
 GreaterExpr.Expr5 ::= Expr ">" Expr;
 LeqExpr.Expr5 ::= Expr "<=" Expr;
 GeqExpr.Expr5 ::= Expr ">=" Expr;
+EqExpr.Expr5 ::= Expr "==" Expr;
+NeqExpr.Expr5 ::= Expr "!=" Expr;
 
 AndExpr.Expr4 ::= Expr "&&" Expr;
 
@@ -107,7 +113,7 @@ CondExpr.Expr1 ::= Expr "?" Expr ":" Expr;
 
 ThrowExpr.Expr ::= "throw" Expr;
 
-coercions Expr 11;
+coercions Expr 12;
 
 // ------------------------------------------------------------------
 // Literal values.
@@ -115,13 +121,13 @@ coercions Expr 11;
 separator String "";
 IntLiteral    .Literal ::= Integer;
 StringLiteral .Literal ::= [String] String;
+CharLiteral   .Literal ::= Char;
 DoubleLiteral .Literal ::= Double;
 TrueLiteral   .Literal ::= "true";
 FalseLiteral  .Literal ::= "false";
 // ------------------------------------------------------------------
 
 // Qualified ids.
-separator nonempty Typename ",";
 FinQualIdent.QualIdent ::= TrailQualIdent;
 NestQualIdent.QualIdent ::= Identifier "::" QualIdent;
 TemplQualIdent.QualIdent ::= Identifier "<" [Typename] ">" "::" QualIdent;
