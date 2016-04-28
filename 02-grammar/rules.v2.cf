@@ -1,0 +1,112 @@
+entrypoints Prog;
+IProg.Prog ::= [Def];
+separator Def "";
+
+// Function definitions.
+FunDef.Def ::= Typename QualIdent "(" [ArgDecl] ")" FunBody;
+InlFunDef.Def ::= "inline" Typename QualIdent "(" [ArgDecl] ")" FunBody;
+EmptyFunBody.FunBody ::= ";";
+IFunBody.FunBody ::= "{" [Stmt] "}";
+
+// Typedefs.
+TypedefDef.Def ::= TypedefStmt;
+
+// Using imports.
+UsingDef.Def ::= "using" QualIdent ";";
+
+// Struct definition.
+StructDef.Def ::= StructStmt;
+
+// Var declaration definition.
+VarDeclDef.Def ::= VarDecl;
+
+// Function arguments.
+separator ArgDecl ",";
+IArgDecl.ArgDecl ::= Typename ArgSpec;
+EmptyArgSpec.ArgSpec ::= ;
+IArgSpec.ArgSpec ::= QualIdent ArgDefaultSpec;
+EmptyArgDefaultSpec.ArgDefaultSpec ::= ;
+IArgDefaultSpec.ArgDefaultSpec ::= "=" Constant;
+
+// Typenames.
+ConstTypename.Typename      ::= "const" Typename1;
+ReferenceTypename.Typename1 ::= Typename2 "&";
+PointerTypename.Typename1   ::= Typename2 "*";
+PrimitiveTypename.Typename2 ::= BuiltinPrimitive;
+UserTypename.Typename2 ::= QualIdent;
+coercions Typename 2;
+
+// Typedef statement.
+ITypedefStmt.TypedefStmt ::= "typedef" Typename QualIdent ";";
+
+// Struct definition.
+IStructStmt.StructStmt ::= "struct" QualIdent "{" "}" ";";
+
+// Variable declarations.
+separator nonempty VarDeclInit ",";
+IVarDecl.VarDecl ::= Typename [VarDeclInit] ";";
+IVarDeclInit.VarDeclInit ::= QualIdent;
+InitVarDeclInit.VarDeclInit ::= QualIdent "=" VarInitVal;
+ConstVarInitVal.VarInitVal ::= Constant;
+IdentVarInitVal.VarInitVal ::= QualIdent;
+
+// Statements.
+separator Stmt "";
+NopStmt.Stmt ::= ";";
+VarDeclStmt.Stmt ::= VarDecl;
+ExprStmt.Stmt ::= Expr ";";
+ReturnStmt.Stmt ::= "return" Expr ";";
+
+// Expressions.
+ConstExpr.Expr ::= Constant;
+VarExpr.Expr ::= QualIdent;
+
+// ------------------------------------------------------------------
+// Constant values.
+// ------------------------------------------------------------------
+separator String "";
+IntConstant    .Constant ::= Integer;
+StringConstant .Constant ::= [String] String;
+DoubleConstant .Constant ::= Double;
+CharConstant   .Constant ::= Char;
+TrueConstant   .Constant ::= "true";
+FalseConstant  .Constant ::= "false";
+// ------------------------------------------------------------------
+
+// Qualified ids.
+separator nonempty Typename ",";
+FinQualIdent.QualIdent ::= TrailQualIdent;
+NestQualIdent.QualIdent ::= Identifier "::" QualIdent;
+TemplQualIdent.QualIdent ::= Identifier "<" [Typename] ">" "::" QualIdent;
+ITrailQualIdent.TrailQualIdent ::= Identifier;
+TemplTrailQualIdent.TrailQualIdent ::= Identifier "<" [Typename] ">";
+
+// ------------------------------------------------------------------
+// Builtin primitive types.
+// ------------------------------------------------------------------
+VoidPrimitiveDatatype        .BuiltinPrimitive ::= "void";
+BoolPrimitiveDatatype        .BuiltinPrimitive ::= "bool";
+CharPrimitiveDatatype        .BuiltinPrimitive ::= "char";
+ShortIntPrimitiveDatatype    .BuiltinPrimitive ::= "short" "int";
+IntPrimitiveDatatype         .BuiltinPrimitive ::= "int";
+LongIntPrimitiveDatatype     .BuiltinPrimitive ::= "long" "int";
+LongLongIntPrimitiveDatatype .BuiltinPrimitive ::= "long" "long" "int";
+FloatPrimitiveDatatype       .BuiltinPrimitive ::= "float";
+DoublePrimitiveDatatype      .BuiltinPrimitive ::= "double";
+LongDoublePrimitiveDatatype  .BuiltinPrimitive ::= "long" "double";
+// ------------------------------------------------------------------
+
+
+
+// ------------------------------------------------------------------
+// General identifier structure.
+// ------------------------------------------------------------------
+token Identifier (letter(letter|digit|'_')*);
+// ------------------------------------------------------------------
+
+
+
+// Ignore.
+comment "//";
+comment "/*" "*/";
+comment "#";
