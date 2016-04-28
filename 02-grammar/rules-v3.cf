@@ -49,8 +49,7 @@ IStruct.Struct ::= "struct" Identifier "{" [VarDecl] "}" ";";
 separator nonempty VarDeclInit ",";
 IVarDecl.VarDecl                 ::= Typename [VarDeclInit] ";";
 IVarDeclInit.VarDeclInit         ::= Identifier;
-InitVarDeclInit.VarDeclInit      ::= Identifier "=" VarInitVal;
-ExprVarInitVal.VarInitVal     ::= Expr;
+InitVarDeclInit.VarDeclInit      ::= Identifier "=" Expr;
 
 // Statements.
 NopStmt.Stmt ::= ";";
@@ -67,60 +66,56 @@ StructStmt.Stmt ::= Struct;
 TypedefStmt.Stmt ::= Typedef;
 
 // Expressions.
-separator Expr10 ",";
-LiteralExpr.Expr12 ::= Literal;
+separator Expr2 ",";
 
-VarExpr.Expr11 ::= QualIdent;
-IndexingExpr.Expr11 ::= Expr11 "[" Expr10 "]";
-CallExpr.Expr11 ::= Expr11 "(" [Expr10] ")";
+ThrowExpr.Expr1    ::= "throw" Expr2;
+AssignExpr.Expr2   ::= Expr15 AssignOperator Expr2;
+TernaryExpr.Expr3  ::= Expr4 "?" Expr ":" Expr3;
+OrExpr.Expr4       ::= Expr4 "||" Expr5;
+AndExpr.Expr5      ::= Expr5 "&&" Expr6;
+EqExpr.Expr9       ::= Expr9 "==" Expr10;
+NeqExpr.Expr9      ::= Expr9 "!=" Expr10;
+LThanExpr.Expr10   ::= Expr10 "<" Expr11;
+GThanExpr.Expr10   ::= Expr10 ">" Expr11;
+LEqExpr.Expr10     ::= Expr10 "<=" Expr11;
+GEqExpr.Expr10     ::= Expr10 ">=" Expr11;
+LShiftExpr.Expr11  ::= Expr11 "<<" Expr12;
+RShiftExpr.Expr11  ::= Expr11 ">>" Expr12;
+AddExpr.Expr12     ::= Expr12 "+" Expr13;
+SubExpr.Expr12     ::= Expr12 "-" Expr13;
+MulExpr.Expr13     ::= Expr13 "*" Expr14;
+DivExpr.Expr13     ::= Expr13 "/" Expr14;
+ModExpr.Expr13     ::= Expr13 "%" Expr14;
+PreIncExpr.Expr15  ::= "++" Expr15;
+PreDecExpr.Expr15  ::= "--" Expr15;
+UnaryOpExpr.Expr15 ::= UnaryOperator Expr14;
+IndexExpr.Expr16   ::= Expr16 "[" Expr "]" ;
+CallExpr.Expr16    ::= Expr16 "(" [Expr2] ")";
+DotAccExpr.Expr16  ::= Expr16 "." Identifier;
+ArrAccExpr.Expr16  ::= Expr16 "->" Identifier;
+PostIncExpr.Expr16 ::= Expr16 "++";
+PostDecExpr.Expr16 ::= Expr16 "--";
+VarExpr.Expr17     ::= QualIdent;
+LiteralExpr.Expr17 ::= Literal;
 
-DotAccExpr.Expr10 ::= Expr10 "." Expr9;
-ArrAccExpr.Expr10 ::= Expr10 "->" Expr9;
-DerefExpr.Expr10 ::= "*" Expr10;
-PostIncExpr.Expr10 ::= Expr10 "++";
-PostDecExpr.Expr10 ::= Expr10 "--";
+coercions Expr 17;
 
-PreIncExpr.Expr9 ::= "++" Expr9;
-PreDecExpr.Expr9 ::= "--" Expr9;
-NegateExpr.Expr9 ::= "!" Expr9;
+IAssignOperator   .AssignOperator ::= "=";
+AddAssignOperator .AssignOperator ::= "+=";
+SubAssignOperator .AssignOperator ::= "-=";
+MulAssignOperator .AssignOperator ::= "*=";
+DivAssignOperator .AssignOperator ::= "/=";
+ModAssignOperator .AssignOperator ::= "%=";
 
-MulExpr.Expr8 ::= Expr8 "*" Expr7;
-DivExpr.Expr8 ::= Expr8 "/" Expr7;
-ModExpr.Expr8 ::= Expr8 "%" Expr7;
-
-AddExpr.Expr7 ::= Expr7 "+" Expr6;
-SubExpr.Expr7 ::= Expr7 "-" Expr6;
-
-LShiftExpr.Expr6 ::= Expr6 "<<" Expr5;
-RShiftExpr.Expr6 ::= Expr6 ">>" Expr5;
-
-LessExpr.Expr5 ::= Expr5 "<" Expr4;
-GreaterExpr.Expr5 ::= Expr5 ">" Expr4;
-LeqExpr.Expr5 ::= Expr5 "<=" Expr4;
-GeqExpr.Expr5 ::= Expr5 ">=" Expr4;
-EqExpr.Expr5 ::= Expr5 "==" Expr4;
-NeqExpr.Expr5 ::= Expr5 "!=" Expr4;
-
-AndExpr.Expr4 ::= Expr4 "&&" Expr3;
-
-OrExpr.Expr3 ::= Expr3 "||" Expr2;
-
-AssExpr.Expr2 ::= Expr2 "=" Expr1;
-AddAssExpr.Expr2 ::= Expr2 "+=" Expr1;
-SubAssExpr.Expr2 ::= Expr2 "-=" Expr1;
-
-CondExpr.Expr1 ::= Expr1 "?" Expr ":" Expr;
-
-ThrowExpr.Expr ::= "throw" Expr;
-
-coercions Expr 12;
+DerefUnaryOperator  .UnaryOperator ::= "*";
+NegateUnaryOperator .UnaryOperator ::= "!";
 
 // ------------------------------------------------------------------
 // Literal values.
 // ------------------------------------------------------------------
-separator String "";
+separator nonempty String "";
 IntLiteral    .Literal ::= Integer;
-StringLiteral .Literal ::= [String] String;
+StringLiteral .Literal ::= [String];
 CharLiteral   .Literal ::= Char;
 DoubleLiteral .Literal ::= Double;
 TrueLiteral   .Literal ::= "true";
