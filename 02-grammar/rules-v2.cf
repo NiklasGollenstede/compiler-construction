@@ -67,25 +67,33 @@ IfElseStmt.Stmt ::= "if" "(" Expr ")" Stmt "else" Stmt;
 
 // Expressions.
 separator Expr ",";
-LiteralExpr.Expr15 ::= Literal;
+LiteralExpr.Expr11 ::= Literal;
 
-VarExpr.Expr14 ::= QualIdent;
-IndexingExpr.Expr14 ::= Expr "[" Expr "]";
-CallExpr.Expr14 ::= Expr "(" [Expr] ")";
+VarExpr.Expr10 ::= QualIdent;
+IndexingExpr.Expr10 ::= Expr "[" Expr "]";
+CallExpr.Expr10 ::= Expr "(" [Expr] ")";
 
-DotAccExpr.Expr13 ::= Expr "." Identifier;
-ArrAccExpr.Expr13 ::= Expr "->" Identifier;
-DerefExpr.Expr13 ::= "*" Expr;
-PostIncExpr.Expr13 ::= Expr "++";
-PostDecExpr.Expr13 ::= Expr "--";
+DotAccExpr.Expr9 ::= Expr "." Identifier;
+ArrAccExpr.Expr9 ::= Expr "->" Identifier;
+DerefExpr.Expr9 ::= "*" Expr;
+PostIncExpr.Expr9 ::= Expr "++";
+PostDecExpr.Expr9 ::= Expr "--";
 
-PreIncExpr.Expr12 ::= "++" Expr;
-PreDecExpr.Expr12 ::= "--" Expr;
-NegateExpr.Expr12 ::= "!" Expr;
+PreIncExpr.Expr8 ::= "++" Expr;
+PreDecExpr.Expr8 ::= "--" Expr;
+NegateExpr.Expr8 ::= "!" Expr;
 
-MulExpr.Expr11 ::= Expr "*" Expr;
-DivExpr.Expr11 ::= Expr "/" Expr;
-ModExpr.Expr11 ::= Expr "%" Expr;
+MulExpr.Expr7 ::= Expr "*" Expr;
+DivExpr.Expr7 ::= Expr "/" Expr;
+ModExpr.Expr7 ::= Expr "%" Expr;
+
+AddExpr.Expr6 ::= Expr "+" Expr;
+SubExpr.Expr6 ::= Expr "-" Expr;
+
+LessExpr.Expr5 ::= Expr "<" Expr;
+GreaterExpr.Expr5 ::= Expr ">" Expr;
+LeqExpr.Expr5 ::= Expr "<=" Expr;
+GeqExpr.Expr5 ::= Expr ">=" Expr;
 
 // ------------------------------------------------------------------
 // Literal values.
