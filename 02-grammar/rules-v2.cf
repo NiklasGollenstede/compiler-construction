@@ -95,6 +95,20 @@ GreaterExpr.Expr5 ::= Expr ">" Expr;
 LeqExpr.Expr5 ::= Expr "<=" Expr;
 GeqExpr.Expr5 ::= Expr ">=" Expr;
 
+AndExpr.Expr4 ::= Expr "&&" Expr;
+
+OrExpr.Expr3 ::= Expr "||" Expr;
+
+AssExpr.Expr2 ::= Expr "=" Expr;
+AddAssExpr.Expr2 ::= Expr "+=" Expr;
+SubAssExpr.Expr2 ::= Expr "-=" Expr;
+
+CondExpr.Expr1 ::= Expr "?" Expr ":" Expr;
+
+ThrowExpr.Expr ::= "throw" Expr;
+
+coercions Expr 11;
+
 // ------------------------------------------------------------------
 // Literal values.
 // ------------------------------------------------------------------
