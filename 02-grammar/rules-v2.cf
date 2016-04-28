@@ -1,5 +1,5 @@
-entrypoints Prog;
-IProg.Prog ::= [Def];
+entrypoints Program;
+IProgram.Program ::= [Def];
 separator Def "";
 
 // Function definitions.
@@ -26,7 +26,7 @@ IArgDecl.ArgDecl ::= Typename ArgSpec;
 EmptyArgSpec.ArgSpec ::= ;
 IArgSpec.ArgSpec ::= QualIdent ArgDefaultSpec;
 EmptyArgDefaultSpec.ArgDefaultSpec ::= ;
-IArgDefaultSpec.ArgDefaultSpec ::= "=" Constant;
+IArgDefaultSpec.ArgDefaultSpec ::= "=" Literal;
 
 // Typenames.
 ConstTypename.Typename      ::= "const" Typename1;
@@ -40,37 +40,62 @@ coercions Typename 2;
 ITypedefStmt.TypedefStmt ::= "typedef" Typename QualIdent ";";
 
 // Struct definition.
-IStructStmt.StructStmt ::= "struct" QualIdent "{" "}" ";";
+separator nonempty VarDecl "";
+EmptyStructStmt.StructStmt ::= "struct" Identifier "{" "}" ";";
+IStructStmt.StructStmt ::= "struct" Identifier "{" [VarDecl] "}" ";";
 
 // Variable declarations.
 separator nonempty VarDeclInit ",";
 IVarDecl.VarDecl ::= Typename [VarDeclInit] ";";
-IVarDeclInit.VarDeclInit ::= QualIdent;
-InitVarDeclInit.VarDeclInit ::= QualIdent "=" VarInitVal;
-ConstVarInitVal.VarInitVal ::= Constant;
+IVarDeclInit.VarDeclInit ::= Identifier;
+InitVarDeclInit.VarDeclInit ::= Identifier "=" VarInitVal;
+LiteralVarInitVal.VarInitVal ::= Literal;
 IdentVarInitVal.VarInitVal ::= QualIdent;
 
 // Statements.
 separator Stmt "";
 NopStmt.Stmt ::= ";";
+BlockStmt.Stmt ::= "{" [Stmt] "}";
 VarDeclStmt.Stmt ::= VarDecl;
 ExprStmt.Stmt ::= Expr ";";
 ReturnStmt.Stmt ::= "return" Expr ";";
+WhileStmt.Stmt ::= "while" "(" Expr ")" Stmt;
+DoWhileStmt.Stmt ::= "do" Stmt "while" "(" Expr ")" ";";
+ForStmt.Stmt ::= "for" "(" VarDecl Expr ";" Expr ")" Stmt;
+IfStmt.Stmt ::= "if" "(" Expr ")" Stmt;
+IfElseStmt.Stmt ::= "if" "(" Expr ")" Stmt "else" Stmt;
 
 // Expressions.
-ConstExpr.Expr ::= Constant;
-VarExpr.Expr ::= QualIdent;
+separator Expr ",";
+LiteralExpr.Expr15 ::= Literal;
+
+VarExpr.Expr14 ::= QualIdent;
+IndexingExpr.Expr14 ::= Expr "[" Expr "]";
+CallExpr.Expr14 ::= Expr "(" [Expr] ")";
+
+DotAccExpr.Expr13 ::= Expr "." Identifier;
+ArrAccExpr.Expr13 ::= Expr "->" Identifier;
+DerefExpr.Expr13 ::= "*" Expr;
+PostIncExpr.Expr13 ::= Expr "++";
+PostDecExpr.Expr13 ::= Expr "--";
+
+PreIncExpr.Expr12 ::= "++" Expr;
+PreDecExpr.Expr12 ::= "--" Expr;
+NegateExpr.Expr12 ::= "!" Expr;
+
+MulExpr.Expr11 ::= Expr "*" Expr;
+DivExpr.Expr11 ::= Expr "/" Expr;
+ModExpr.Expr11 ::= Expr "%" Expr;
 
 // ------------------------------------------------------------------
-// Constant values.
+// Literal values.
 // ------------------------------------------------------------------
 separator String "";
-IntConstant    .Constant ::= Integer;
-StringConstant .Constant ::= [String] String;
-DoubleConstant .Constant ::= Double;
-CharConstant   .Constant ::= Char;
-TrueConstant   .Constant ::= "true";
-FalseConstant  .Constant ::= "false";
+IntLiteral    .Literal ::= Integer;
+StringLiteral .Literal ::= [String] String;
+DoubleLiteral .Literal ::= Double;
+TrueLiteral   .Literal ::= "true";
+FalseLiteral  .Literal ::= "false";
 // ------------------------------------------------------------------
 
 // Qualified ids.
@@ -84,16 +109,10 @@ TemplTrailQualIdent.TrailQualIdent ::= Identifier "<" [Typename] ">";
 // ------------------------------------------------------------------
 // Builtin primitive types.
 // ------------------------------------------------------------------
-VoidPrimitiveDatatype        .BuiltinPrimitive ::= "void";
-BoolPrimitiveDatatype        .BuiltinPrimitive ::= "bool";
-CharPrimitiveDatatype        .BuiltinPrimitive ::= "char";
-ShortIntPrimitiveDatatype    .BuiltinPrimitive ::= "short" "int";
-IntPrimitiveDatatype         .BuiltinPrimitive ::= "int";
-LongIntPrimitiveDatatype     .BuiltinPrimitive ::= "long" "int";
-LongLongIntPrimitiveDatatype .BuiltinPrimitive ::= "long" "long" "int";
-FloatPrimitiveDatatype       .BuiltinPrimitive ::= "float";
-DoublePrimitiveDatatype      .BuiltinPrimitive ::= "double";
-LongDoublePrimitiveDatatype  .BuiltinPrimitive ::= "long" "double";
+BoolPrimitiveDatatype   .BuiltinPrimitive ::= "bool";
+DoublePrimitiveDatatype .BuiltinPrimitive ::= "double";
+IntPrimitiveDatatype    .BuiltinPrimitive ::= "int";
+VoidPrimitiveDatatype   .BuiltinPrimitive ::= "void";
 // ------------------------------------------------------------------
 
 
