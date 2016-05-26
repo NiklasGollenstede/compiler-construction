@@ -31,12 +31,11 @@ IArgDefaultSpec.ArgDefaultSpec ::= "=" Expr;
 
 // Typenames.
 separator nonempty Typename ",";
-ConstTypename.Typename      ::= "const" Typename1;
-ReferenceTypename.Typename1 ::= Typename2 "&";
-PointerTypename.Typename1   ::= Typename2 "*";
-PrimitiveTypename.Typename2 ::= BuiltinPrimitive;
-UserTypename.Typename2      ::= QualIdent;
-coercions Typename 2; 
+ReferenceTypename.Typename  ::= Typename "&";
+PrimitiveTypename.Typename  ::= BuiltinPrimitive;
+ConstPrimitiveTypename.Typename ::= "const" BuiltinPrimitive;
+UserTypename.Typename       ::= QualIdent;
+ConstUserTypename.Typename  ::= "const" QualIdent;
 
 // Typedef statement.
 ITypedef.Typedef ::= "typedef" Typename Identifier ";";
@@ -95,6 +94,7 @@ DotAccExpr.Expr16  ::= Expr16 "." Identifier;
 ArrAccExpr.Expr16  ::= Expr16 "->" Identifier;
 PostIncExpr.Expr16 ::= Expr16 "++";
 PostDecExpr.Expr16 ::= Expr16 "--";
+//VarExpr.Expr17     ::= Typename;
 VarExpr.Expr17     ::= QualIdent;
 LiteralExpr.Expr17 ::= Literal;
 
