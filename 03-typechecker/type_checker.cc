@@ -1,30 +1,46 @@
 #include "type_checker.h"
 
-void TypeChecker::visitProgram(Program* t) {} //abstract class
+#define EXCEPT(message) throw std::string(message)
+
+void TypeChecker::visitProgram(Program* t) {
+  visitPDefs((PDefs *)t);
+}
+
 void TypeChecker::visitDef(Def* t) {} //abstract class
 void TypeChecker::visitArg(Arg* t) {} //abstract class
 void TypeChecker::visitStm(Stm* t) {} //abstract class
 void TypeChecker::visitExp(Exp* t) {} //abstract class
 void TypeChecker::visitType(Type* t) {} //abstract class
 
+
 void TypeChecker::visitPDefs(PDefs *pdefs)
 {
-  /* Code For PDefs Goes Here */
-
   pdefs->listdef_->accept(this);
-
 }
 
 void TypeChecker::visitDFun(DFun *dfun)
 {
-  /* Code For DFun Goes Here */
+  std::string const& name = dfun->id_;
 
-  dfun->type_->accept(this);
+  if(env.lookupFunction(name))
+    EXCEPT("A function called " + name + " already exists.");
+
+  Function fn;
+  auto returnType = (Datatype*)env.visit(dfun->type_, this);
+  if(!returnType)
+    EXCEPT("Return type null.");
+
   visitId(dfun->id_);
-  dfun->listarg_->accept(this);
-  dfun->liststm_->accept(this);
+  fn.name = name;
 
+  auto arglist = (std::vector<Variable>*)env.visit(dfun->listarg_, this);
+  if(!arglist)
+    EXCEPT("Argument list null.");
+
+  env.visit(dfun->liststm_, this);
+  env.registerFunction(fn);
 }
+
 
 void TypeChecker::visitADecl(ADecl *adecl)
 {

@@ -1,6 +1,8 @@
 #include "env.h"
+#include "type_checker.h"
+#include "cpp.build/Absyn.H"
 
-Env::Env() : m_scopes({new Scope()}) { }
+Env::Env() : m_scopes({new Scope()}), m_temp(nullptr) { }
 
 Function const* Env::lookupFunction(std::string const& name) {
 	if(m_funcs.count(name)) return &m_funcs[name];
@@ -41,6 +43,19 @@ bool Env::popScope() {
 		m_scopes.pop_back();
 		return true;
 	} else return false;
+}
+
+void Env::setTemp(void* temp){
+	m_temp = temp;
+}
+
+void* Env::getTemp(){
+	return m_temp;
+}
+
+void* Env::visit(Visitable* v, Visitor* checker) {
+	v->accept(checker);
+	return getTemp();
 }
 
 Env::~Env() {
