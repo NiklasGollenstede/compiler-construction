@@ -1,7 +1,7 @@
 #ifndef TYPE_CHECKER_H
 #define TYPE_CHECKER_H
 
-#include "Absyn.H"
+#include "cpp.build/Absyn.H"
 #include "env.h"
 
 class TypeChecker : public Visitor {
