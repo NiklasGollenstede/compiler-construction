@@ -11,14 +11,16 @@
 class Env {
 private:
 	std::map<std::string, Function> m_funcs;
+	Function m_lastFunc;
 	std::vector<Scope*> m_scopes;
-	void *m_temp;
+	void* m_temp;
 
 public:
 	Env();
 
 	Function const* lookupFunction(std::string const& name);
 	bool registerFunction(Function const& function);
+	Function const& getLastFunction();
 
 	//
 	Variable const* lookupVariable(std::string const& name);

@@ -1,6 +1,20 @@
 #include "type_checker.h"
 #include "env.h"
 
+// Throw an exception containing the given node's line position and description.
+template<typename T>
+void error(T* node, std::string const& description) {
+  EXCEPT("Error in line " + std::to_string(node->line_number) + ": " + description);
+}
+
+// Throw a critical error w/ default message.
+inline void crash() { EXCEPT("A critical error occured."); }
+
+template<typename T>
+void crash(T* node) {
+  EXCEPT("A critical error occured in line " + std::to_string(node->line_number) + ".");
+}
+
 TypeChecker::TypeChecker()
   :m_env(new Env()) {
 }
@@ -22,36 +36,36 @@ void TypeChecker::visitDFun(DFun *dfun)
   std::string const& name = dfun->id_;
 
   // Function name already exists. Abort.
-  if(m_env->lookupFunction(name) != nullptr) EXCEPT("Function " + name + " redefined.");
+  if(m_env->lookupFunction(name) != nullptr) {
+    error(dfun, "Function " + name + " redefined.");
+  }
 
   Function fn;
   fn.name = name;
-  LOG("Function name is: " << name);
 
   // Visit datatype.
   Datatype returnType;
   if(m_env->visit(dfun->type_, this, &returnType)) {
-    LOG("Return type is: " << Datatypes::get(returnType));
     fn.returnType = returnType;
-  } else EXCEPT("Undefined return type.");
+  } else crash(dfun->type_);
 
   visitId(dfun->id_);
 
   // Visit argument list.
-
   std::vector<Variable> args;
   if(m_env->visit(dfun->listarg_, this, &args)) {
-    for(auto arg : args) {
-      LOG("Argument: " << Datatypes::get(arg.type) << " " << arg.name);
-    }
     fn.args = args;
-  } //else EXCEPT("Undefined argument list.");
+  } else crash();
 
-  // Visit statement list.
+  // Register new function and create fn scope.
+  m_env->registerFunction(fn);
+  m_env->pushScope();
+
+  // Visit function body.
   m_env->visit(dfun->liststm_, this);
 
-  // After success, register checked function.
-  m_env->registerFunction(fn);
+  // Remove function scope.
+  m_env->popScope();
 }
 
 
@@ -62,7 +76,7 @@ void TypeChecker::visitADecl(ADecl *adecl)
   Datatype type;
   if(m_env->visit(adecl->type_, this, &type)) {
     arg->type = type;
-  } else EXCEPT("Argument type undefined.");
+  } else crash(adecl->type_);
 
   visitId(adecl->id_);
   arg->name = adecl->id_;
@@ -80,11 +94,15 @@ void TypeChecker::visitSExp(SExp *sexp)
 
 void TypeChecker::visitSDecls(SDecls *sdecls)
 {
-  /* Code For SDecls Goes Here */
-
-  sdecls->type_->accept(this);
-  sdecls->listid_->accept(this);
-
+  Datatype type;
+  if(m_env->visit(sdecls->type_, this, &type)) {
+    std::vector<std::string> names;
+    if(m_env->visit(sdecls->listid_, this, &names)) {
+      for(auto name : names) {
+        m_env->registerVariable(Variable { type, name });
+      }
+    }
+  }
 }
 
 void TypeChecker::visitSInit(SInit *sinit)
@@ -99,17 +117,25 @@ void TypeChecker::visitSInit(SInit *sinit)
 
 void TypeChecker::visitSReturn(SReturn *sreturn)
 {
-  /* Code For SReturn Goes Here */
-
-  sreturn->exp_->accept(this);
-
+  Datatype exprType;
+  if(m_env->visit(sreturn->exp_, this, &exprType)) {
+    if(exprType != m_env->getLastFunction().returnType) {
+      error(
+        sreturn, 
+        "Returning " 
+          + Datatypes::get(exprType) 
+          + " instead of " 
+          + Datatypes::get(m_env->getLastFunction().returnType)
+          + ".");
+    }
+  } else crash(sreturn->exp_);
 }
 
 void TypeChecker::visitSReturnVoid(SReturnVoid *sreturnvoid)
 {
-  /* Code For SReturnVoid Goes Here */
-
-
+  if(m_env->getLastFunction().returnType != Datatype::Void){
+    error(sreturnvoid, "Returning void from non-void function.");
+  }
 }
 
 void TypeChecker::visitSWhile(SWhile *swhile)
@@ -141,48 +167,41 @@ void TypeChecker::visitSIfElse(SIfElse *sifelse)
 
 void TypeChecker::visitETrue(ETrue *etrue)
 {
-  /* Code For ETrue Goes Here */
-
-
+  m_env->setTemp(new Datatype(Datatype::Bool));
 }
 
 void TypeChecker::visitEFalse(EFalse *efalse)
 {
-  /* Code For EFalse Goes Here */
-
-
+  m_env->setTemp(new Datatype(Datatype::Bool));
 }
 
 void TypeChecker::visitEInt(EInt *eint)
 {
-  /* Code For EInt Goes Here */
-
   visitInteger(eint->integer_);
-
+  m_env->setTemp(new Datatype(Datatype::Int));
 }
 
 void TypeChecker::visitEDouble(EDouble *edouble)
 {
-  /* Code For EDouble Goes Here */
-
   visitDouble(edouble->double_);
-
+  m_env->setTemp(new Datatype(Datatype::Double));
 }
 
 void TypeChecker::visitEString(EString *estring)
 {
-  /* Code For EString Goes Here */
-
   visitString(estring->string_);
-
+  m_env->setTemp(new Datatype(Datatype::String));
 }
 
 void TypeChecker::visitEId(EId *eid)
 {
-  /* Code For EId Goes Here */
-
   visitId(eid->id_);
-
+  auto name = eid->id_;
+  auto var  = m_env->lookupVariable(name); 
+  
+  if(var != nullptr) {
+    m_env->setTemp(new Datatype(var->type));
+  } else error(eid, "Variable " + name + " undefined.");
 }
 
 void TypeChecker::visitEApp(EApp *eapp)
@@ -389,15 +408,12 @@ void TypeChecker::visitListDef(ListDef* listdef)
 void TypeChecker::visitListArg(ListArg* listarg)
 {
   auto arguments = new std::vector<Variable>();
-  
-  for (ListArg::iterator i = listarg->begin() ; i != listarg->end() ; ++i)
-  {
+  for (ListArg::iterator i = listarg->begin(); i != listarg->end(); ++i) {
     Variable arg;
     if(m_env->visit(*i, this, &arg)) {
       arguments->push_back(arg);
-    } else EXCEPT("Argument undefined.");
+    } else crash();
   }
-
   m_env->setTemp(arguments);
 }
 
@@ -419,10 +435,11 @@ void TypeChecker::visitListExp(ListExp* listexp)
 
 void TypeChecker::visitListId(ListId* listid)
 {
-  for (ListId::iterator i = listid->begin() ; i != listid->end() ; ++i)
-  {
-    visitId(*i) ;
+  auto ids = new std::vector<std::string>();
+  for (ListId::iterator i = listid->begin() ; i != listid->end() ; ++i) {
+    ids->push_back(*i);
   }
+  m_env->setTemp(ids);
 }
 
 

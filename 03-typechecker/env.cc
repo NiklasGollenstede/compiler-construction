@@ -2,7 +2,10 @@
 #include "type_checker.h"
 #include "cpp.build/Absyn.H"
 
-Env::Env() : m_scopes({new Scope()}), m_temp(nullptr) { }
+Env::Env() 
+	: m_scopes({ new Scope() }), 
+	  m_temp(nullptr) { 
+}
 
 Function const* Env::lookupFunction(std::string const& name) {
 	if(m_funcs.count(name)) return &m_funcs[name];
@@ -12,8 +15,13 @@ Function const* Env::lookupFunction(std::string const& name) {
 bool Env::registerFunction(Function const& function) {
 	if(lookupFunction(function.name) == nullptr) {
 		m_funcs[function.name] = function;
+		m_lastFunc = function;
 		return true;
 	} else return false;
+}
+
+Function const& Env::getLastFunction() {
+	return m_lastFunc;
 }
 
 Variable const* Env::lookupVariable(std::string const& name) {
