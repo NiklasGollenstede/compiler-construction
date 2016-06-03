@@ -11,13 +11,18 @@ OBJECTS    = obj/absyn.o \
 EXECUTABLE = typechecker
 TESTFILE   = test.cpp
 
-run: all
+run: clean $(EXECUTABLE)
 	./${EXECUTABLE} ${TESTFILE}
 
-all: $(EXECUTABLE)
-
 clean:
-	rm -f obj/* ${EXECUTABLE}
+	rm -f obj/scope.o obj/env.o obj/type_checker.o obj/main.o
+
+clean-all:
+	rm -r obj ${EXECUTABLE}
+	mkdir obj
+
+init:
+	mkdir obj
     
 $(EXECUTABLE): $(OBJECTS) 
 	$(CXX) ${LDF} -o $@ ${OBJECTS}

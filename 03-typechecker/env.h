@@ -5,14 +5,14 @@
 #include "scope.h"
 #include "function.h"
 
-class Visitable;
-class Visitor;
+#include "cpp.build/Absyn.H"
+#include "type_checker.h"
 
 class Env {
 private:
 	std::map<std::string, Function> m_funcs;
 	std::vector<Scope*> m_scopes;
-	void* m_temp;
+	void *m_temp;
 
 public:
 	Env();
@@ -28,9 +28,33 @@ public:
 	void pushScope();
 	bool popScope();
 
-	void setTemp(void* temp);
-	void* getTemp();
-	void* visit(Visitable* v, Visitor* checker);
+	template<typename T>
+	void setTemp(T* temp) {
+		m_temp = (void*)temp;
+	}
+
+	template<typename T>
+	bool getTemp(T* out) {
+		if(m_temp == nullptr) {
+			return false;
+		} else {
+			*out = *(T*)m_temp;
+			delete (T*)m_temp;
+			setTemp<void>(nullptr);
+			return true;
+		}
+	}
+
+	// Returns value of getTemp after the node was visited.
+	template<typename T>
+	bool visit(Visitable* v, TypeChecker* checker, T* out) {
+		v->accept(checker);
+		return getTemp<T>(out);
+	}
+
+	inline void visit(Visitable* v, TypeChecker* checker) {
+		v->accept(checker);
+	}
 
 	~Env();
 };

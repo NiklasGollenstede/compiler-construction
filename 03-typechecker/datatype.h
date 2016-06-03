@@ -21,7 +21,7 @@ public:
 			case Datatype::Double:    return "double";
 			case Datatype::Void:      return "void";
 			case Datatype::String:    return "string";
-			default: throw std::exception();
+			default: throw std::runtime_error("Undefined datatype.");
 		}
 	}
 

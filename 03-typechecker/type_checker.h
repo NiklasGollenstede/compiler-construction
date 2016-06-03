@@ -1,14 +1,18 @@
 #ifndef TYPE_CHECKER_H
 #define TYPE_CHECKER_H
 
+#include "common.h"
 #include "cpp.build/Absyn.H"
-#include "env.h"
+
+class Env;
 
 class TypeChecker : public Visitor {
 private:
-	Env env;
+	Env* m_env;
 
 public:
+	TypeChecker();
+
 	void visitProgram(Program* p);
 	void visitDef(Def* p);
 	void visitArg(Arg* p);
@@ -68,6 +72,8 @@ public:
 	void visitDouble(Double x);
 	void visitString(String x);
 	void visitIdent(Ident x);
+
+	virtual ~TypeChecker();
 };
 
 

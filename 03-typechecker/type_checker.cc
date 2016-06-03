@@ -1,14 +1,16 @@
 #include "type_checker.h"
+#include "env.h"
 
-void TypeChecker::visitProgram(Program* t) {
-  visitPDefs((PDefs *)t);
+TypeChecker::TypeChecker()
+  :m_env(new Env()) {
 }
 
+void TypeChecker::visitProgram(Program* t) { visitPDefs((PDefs *)t); } // abstract class
 void TypeChecker::visitDef(Def* t) {} //abstract class
 void TypeChecker::visitArg(Arg* t) {} //abstract class
 void TypeChecker::visitStm(Stm* t) {} //abstract class
 void TypeChecker::visitExp(Exp* t) {} //abstract class
-void TypeChecker::visitType(Type* t) {} //abstract class
+void TypeChecker::visitType(Type* t) {} // abstract class
 
 void TypeChecker::visitPDefs(PDefs *pdefs)
 {
@@ -19,33 +21,53 @@ void TypeChecker::visitDFun(DFun *dfun)
 {
   std::string const& name = dfun->id_;
 
-  if(env.lookupFunction(name))
-    EXCEPT("A function called " + name + " already exists.");
+  // Function name already exists. Abort.
+  if(m_env->lookupFunction(name) != nullptr) EXCEPT("Function " + name + " redefined.");
 
   Function fn;
-  auto returnType = (Datatype*)env.visit(dfun->type_, this);
-  if(!returnType)
-    EXCEPT("Return type null.");
+  fn.name = name;
+  LOG("Function name is: " << name);
+
+  // Visit datatype.
+  Datatype returnType;
+  if(m_env->visit(dfun->type_, this, &returnType)) {
+    LOG("Return type is: " << Datatypes::get(returnType));
+    fn.returnType = returnType;
+  } else EXCEPT("Undefined return type.");
 
   visitId(dfun->id_);
-  fn.name = name;
 
-  auto arglist = (std::vector<Variable>*)env.visit(dfun->listarg_, this);
-  if(!arglist)
-    EXCEPT("Argument list null.");
+  // Visit argument list.
 
-  env.visit(dfun->liststm_, this);
-  env.registerFunction(fn);
+  std::vector<Variable> args;
+  if(m_env->visit(dfun->listarg_, this, &args)) {
+    for(auto arg : args) {
+      LOG("Argument: " << Datatypes::get(arg.type) << " " << arg.name);
+    }
+    fn.args = args;
+  } //else EXCEPT("Undefined argument list.");
+
+  // Visit statement list.
+  m_env->visit(dfun->liststm_, this);
+
+  // After success, register checked function.
+  m_env->registerFunction(fn);
 }
 
 
 void TypeChecker::visitADecl(ADecl *adecl)
 {
-  /* Code For ADecl Goes Here */
+  auto arg = new Variable();
 
-  adecl->type_->accept(this);
+  Datatype type;
+  if(m_env->visit(adecl->type_, this, &type)) {
+    arg->type = type;
+  } else EXCEPT("Argument type undefined.");
+
   visitId(adecl->id_);
+  arg->name = adecl->id_;
 
+  m_env->setTemp(arg);
 }
 
 void TypeChecker::visitSExp(SExp *sexp)
@@ -332,37 +354,27 @@ void TypeChecker::visitETyped(ETyped *etyped)
 
 void TypeChecker::visitType_bool(Type_bool *type_bool)
 {
-  /* Code For Type_bool Goes Here */
-
-
+  m_env->setTemp(new Datatype(Datatype::Bool));
 }
 
 void TypeChecker::visitType_int(Type_int *type_int)
 {
-  /* Code For Type_int Goes Here */
-
-
+  m_env->setTemp(new Datatype(Datatype::Int));
 }
 
 void TypeChecker::visitType_double(Type_double *type_double)
 {
-  /* Code For Type_double Goes Here */
-
-
+  m_env->setTemp(new Datatype(Datatype::Double));
 }
 
 void TypeChecker::visitType_void(Type_void *type_void)
 {
-  /* Code For Type_void Goes Here */
-
-
+  m_env->setTemp(new Datatype(Datatype::Void));
 }
 
 void TypeChecker::visitType_string(Type_string *type_string)
 {
-  /* Code For Type_string Goes Here */
-
-
+  m_env->setTemp(new Datatype(Datatype::String));
 }
 
 
@@ -376,10 +388,17 @@ void TypeChecker::visitListDef(ListDef* listdef)
 
 void TypeChecker::visitListArg(ListArg* listarg)
 {
+  auto arguments = new std::vector<Variable>();
+  
   for (ListArg::iterator i = listarg->begin() ; i != listarg->end() ; ++i)
   {
-    (*i)->accept(this);
+    Variable arg;
+    if(m_env->visit(*i, this, &arg)) {
+      arguments->push_back(arg);
+    } else EXCEPT("Argument undefined.");
   }
+
+  m_env->setTemp(arguments);
 }
 
 void TypeChecker::visitListStm(ListStm* liststm)
@@ -437,5 +456,6 @@ void TypeChecker::visitIdent(Ident x)
   /* Code for Ident Goes Here */
 }
 
-
-
+TypeChecker::~TypeChecker() {
+  delete m_env;
+}

@@ -45,19 +45,6 @@ bool Env::popScope() {
 	} else return false;
 }
 
-void Env::setTemp(void* temp){
-	m_temp = temp;
-}
-
-void* Env::getTemp(){
-	return m_temp;
-}
-
-void* Env::visit(Visitable* v, Visitor* checker) {
-	v->accept(checker);
-	return getTemp();
-}
-
 Env::~Env() {
 	for(auto iter = m_scopes.rbegin(); iter != m_scopes.rend(); ++iter) {
 		if(*iter != nullptr) {
