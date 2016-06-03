@@ -1,7 +1,5 @@
 #include "type_checker.h"
 
-#define EXCEPT(message) throw std::string(message)
-
 void TypeChecker::visitProgram(Program* t) {
   visitPDefs((PDefs *)t);
 }
@@ -11,7 +9,6 @@ void TypeChecker::visitArg(Arg* t) {} //abstract class
 void TypeChecker::visitStm(Stm* t) {} //abstract class
 void TypeChecker::visitExp(Exp* t) {} //abstract class
 void TypeChecker::visitType(Type* t) {} //abstract class
-
 
 void TypeChecker::visitPDefs(PDefs *pdefs)
 {

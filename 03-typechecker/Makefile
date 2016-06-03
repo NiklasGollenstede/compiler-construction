@@ -1,38 +1,44 @@
 CXX        = g++
 CXXF       = -c -g -std=gnu++11
 LDF        = -std=gnu++11
-OBJECTS    = absyn.o lexer.o parser.o scope.o env.o type_checker.o main.o
+OBJECTS    = obj/absyn.o \
+			 obj/lexer.o \
+			 obj/parser.o \
+			 obj/scope.o \
+			 obj/env.o \
+			 obj/type_checker.o \
+			 obj/main.o
 EXECUTABLE = typechecker
 TESTFILE   = test.cpp
 
 run: all
 	./${EXECUTABLE} ${TESTFILE}
 
-all: $(SOURCES) $(EXECUTABLE)
+all: $(EXECUTABLE)
 
 clean:
-	rm -f obj/*.o ${EXECUTABLE}
+	rm -f obj/* ${EXECUTABLE}
     
 $(EXECUTABLE): $(OBJECTS) 
-	$(CXX) ${LDF} -o $@ $(patsubst %,obj/%,$(OBJECTS))
+	$(CXX) ${LDF} -o $@ ${OBJECTS}
 
-absyn.o:
-	$(CXX) $(CXXF) cpp.build/Absyn.C -o obj/$@
+obj/absyn.o:
+	$(CXX) $(CXXF) cpp.build/Absyn.C -o $@
 
-lexer.o:
-	$(CXX) $(CXXF) cpp.build/Lexer.C -o obj/$@
+obj/lexer.o:
+	$(CXX) $(CXXF) cpp.build/Lexer.C -o $@
 
-parser.o:
-	$(CXX) $(CXXF) cpp.build/Parser.C -o obj/$@
+obj/parser.o:
+	$(CXX) $(CXXF) cpp.build/Parser.C -o $@
 
-scope.o:
-	$(CXX) $(CXXF) scope.cc -o obj/$@
+obj/scope.o:
+	$(CXX) $(CXXF) scope.cc -o $@
 
-env.o:
-	$(CXX) $(CXXF) env.cc -o obj/$@
+obj/env.o:
+	$(CXX) $(CXXF) env.cc -o $@
 
-type_checker.o:
-	$(CXX) $(CXXF) type_checker.cc -o obj/$@
+obj/type_checker.o:
+	$(CXX) $(CXXF) type_checker.cc -o $@
 
-main.o:
-	$(CXX) $(CXXF) main.cc -o obj/$@
+obj/main.o:
+	$(CXX) $(CXXF) main.cc -o $@
