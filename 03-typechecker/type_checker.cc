@@ -1,20 +1,6 @@
 #include "type_checker.h"
 #include "env.h"
 
-// Throw an exception containing the given node's line position and description.
-template<typename T>
-void error(T* node, std::string const& description) {
-  EXCEPT("Error in line " + std::to_string(node->line_number) + ": " + description);
-}
-
-// Throw a critical error w/ default message.
-inline void crash() { EXCEPT("A critical error occured."); }
-
-template<typename T>
-void crash(T* node) {
-  EXCEPT("A critical error occured in line " + std::to_string(node->line_number) + ".");
-}
-
 TypeChecker::TypeChecker()
   :m_env(new Env()) {
 }
@@ -86,20 +72,24 @@ void TypeChecker::visitADecl(ADecl *adecl)
 
 void TypeChecker::visitSExp(SExp *sexp)
 {
-  /* Code For SExp Goes Here */
-
   sexp->exp_->accept(this);
-
 }
 
 void TypeChecker::visitSDecls(SDecls *sdecls)
 {
   Datatype type;
   if(m_env->visit(sdecls->type_, this, &type)) {
+
+    if(type == Datatype::Void){
+      error(sdecls, "Variable of type void is not allowed.");
+    }
+
     std::vector<std::string> names;
     if(m_env->visit(sdecls->listid_, this, &names)) {
       for(auto name : names) {
-        m_env->registerVariable(Variable { type, name });
+        if(!m_env->registerVariable(Variable { type, name })){
+          error(sdecls, "Redefined variable " + name + ".");
+        }
       }
     }
   }
@@ -107,12 +97,23 @@ void TypeChecker::visitSDecls(SDecls *sdecls)
 
 void TypeChecker::visitSInit(SInit *sinit)
 {
-  /* Code For SInit Goes Here */
+  Datatype varType, exprType;
+  if(m_env->visit(sinit->type_, this, &varType) && m_env->visit(sinit->exp_, this, &exprType)){
+    if(varType != exprType) {
+      error(sinit, "Variable initialization type mismatch.");
+    }
+  } else crash();
 
-  sinit->type_->accept(this);
+  if(varType == Datatype::Void){
+    error(sinit, "Variable of type void is not allowed.");
+  }
+
+  auto name = sinit->id_;
   visitId(sinit->id_);
-  sinit->exp_->accept(this);
 
+  if(!m_env->registerVariable(Variable { varType, name })){
+    error(sinit, "Redefined variable " + name + ".");
+  }
 }
 
 void TypeChecker::visitSReturn(SReturn *sreturn)
@@ -121,10 +122,10 @@ void TypeChecker::visitSReturn(SReturn *sreturn)
   if(m_env->visit(sreturn->exp_, this, &exprType)) {
     if(exprType != m_env->getLastFunction().returnType) {
       error(
-        sreturn, 
-        "Returning " 
-          + Datatypes::get(exprType) 
-          + " instead of " 
+        sreturn,
+        "Returning "
+          + Datatypes::get(exprType)
+          + " instead of "
           + Datatypes::get(m_env->getLastFunction().returnType)
           + ".");
     }
@@ -138,31 +139,33 @@ void TypeChecker::visitSReturnVoid(SReturnVoid *sreturnvoid)
   }
 }
 
+void TypeChecker::checkExprType(Exp *expr, Datatype type, std::string const& errmsg){
+  Datatype exprType;
+  if(m_env->visit(expr, this, &exprType)){
+    if(exprType != type){
+      error(expr, errmsg);
+    }
+  } else crash();
+}
+
 void TypeChecker::visitSWhile(SWhile *swhile)
 {
-  /* Code For SWhile Goes Here */
-
-  swhile->exp_->accept(this);
+  checkExprType(swhile->exp_, Datatype::Bool, "While condition must be of type bool.");
   swhile->stm_->accept(this);
-
 }
 
 void TypeChecker::visitSBlock(SBlock *sblock)
 {
-  /* Code For SBlock Goes Here */
-
+  m_env->pushScope();
   sblock->liststm_->accept(this);
-
+  m_env->popScope();
 }
 
 void TypeChecker::visitSIfElse(SIfElse *sifelse)
 {
-  /* Code For SIfElse Goes Here */
-
-  sifelse->exp_->accept(this);
+  checkExprType(sifelse->exp_, Datatype::Bool, "If condition must be of type bool.");
   sifelse->stm_1->accept(this);
   sifelse->stm_2->accept(this);
-
 }
 
 void TypeChecker::visitETrue(ETrue *etrue)
@@ -197,8 +200,8 @@ void TypeChecker::visitEId(EId *eid)
 {
   visitId(eid->id_);
   auto name = eid->id_;
-  auto var  = m_env->lookupVariable(name); 
-  
+  auto var  = m_env->lookupVariable(name);
+
   if(var != nullptr) {
     m_env->setTemp(new Datatype(var->type));
   } else error(eid, "Variable " + name + " undefined.");
@@ -206,169 +209,181 @@ void TypeChecker::visitEId(EId *eid)
 
 void TypeChecker::visitEApp(EApp *eapp)
 {
-  /* Code For EApp Goes Here */
-
+  auto name = eapp->id_;
   visitId(eapp->id_);
-  eapp->listexp_->accept(this);
 
+  auto func = m_env->lookupFunction(name);
+  if(func == nullptr){
+    error(eapp, "Function " + name + " undefined.");
+  }
+
+  std::vector<Datatype> argtypes;
+  if(m_env->visit(eapp->listexp_, this, &argtypes)){
+    auto expected = func->args.size();
+    auto supplied = argtypes.size();
+    if(expected != supplied){
+      error(
+        eapp,
+        "Function " + name + " expects " + std::to_string(expected)
+        + " arguments, but " + std::to_string(supplied) + " were supplied."
+      );
+    }
+
+    for(int i=0; i<argtypes.size(); ++i){
+      if(argtypes[i] != func->args[i].type){
+        error(eapp, "Function argument type mismatch.");
+      }
+    }
+  } else crash();
+
+  m_env->setTemp(new Datatype(func->returnType));
 }
 
 void TypeChecker::visitEPIncr(EPIncr *epincr)
 {
-  /* Code For EPIncr Goes Here */
-
-  epincr->exp_->accept(this);
-
+  checkExprType(epincr->exp_, Datatype::Int, "Increment operator expects integer.");
+  m_env->setTemp(new Datatype(Datatype::Int));
 }
 
 void TypeChecker::visitEPDecr(EPDecr *epdecr)
 {
-  /* Code For EPDecr Goes Here */
-
-  epdecr->exp_->accept(this);
-
+  checkExprType(epdecr->exp_, Datatype::Int, "Decrement operator expects integer.");
+  m_env->setTemp(new Datatype(Datatype::Int));
 }
 
 void TypeChecker::visitEIncr(EIncr *eincr)
 {
-  /* Code For EIncr Goes Here */
-
-  eincr->exp_->accept(this);
-
+  checkExprType(eincr->exp_, Datatype::Int, "Increment operator expects integer.");
+  m_env->setTemp(new Datatype(Datatype::Int));
 }
 
 void TypeChecker::visitEDecr(EDecr *edecr)
 {
-  /* Code For EDecr Goes Here */
-
-  edecr->exp_->accept(this);
-
+  checkExprType(edecr->exp_, Datatype::Int, "Decrement operator expects integer.");
+  m_env->setTemp(new Datatype(Datatype::Int));
 }
 
-void TypeChecker::visitETimes(ETimes *etimes)
-{
-  /* Code For ETimes Goes Here */
+Datatype TypeChecker::checkOperands(Operation op, Exp *lhs, Exp *rhs) {
+  Datatype lhs_type, rhs_type, type;
 
-  etimes->exp_1->accept(this);
-  etimes->exp_2->accept(this);
+  if(m_env->visit(lhs, this, &lhs_type) && m_env->visit(rhs, this, &rhs_type)) {
 
+    // Enforce same type.
+    if(lhs_type != rhs_type) {
+      error(
+        lhs,
+        "Operand type mismatch. ("
+          + Datatypes::get(lhs_type) + ", "
+          + Datatypes::get(rhs_type) + ")"
+      );
+    }
+
+    type = lhs_type;
+
+    switch(op) {
+
+      case Operation::Logic:
+        if(type != Datatype::Bool) {
+          error(lhs, "Logical operator needs boolean operands.");
+        }
+      break;
+
+      case Operation::Sub:
+      case Operation::Mul:
+      case Operation::Div:
+        if(type == Datatype::String) {
+          error(lhs, "Strings only support addition.");
+        }
+
+      case Operation::Add:
+      case Operation::Ineq:
+        if(type == Datatype::Bool) {
+          error(lhs, "Boolean type does not support arithmetics.");
+        }
+
+      case Operation::Eq:
+      case Operation::Assign:
+      break;
+    }
+  } else crash();
+
+  return type;
 }
 
-void TypeChecker::visitEDiv(EDiv *ediv)
-{
-  /* Code For EDiv Goes Here */
-
-  ediv->exp_1->accept(this);
-  ediv->exp_2->accept(this);
-
+void TypeChecker::visitETimes(ETimes *etimes) {
+  m_env->setTemp(new Datatype(checkOperands(Operation::Mul, etimes->exp_1, etimes->exp_2)));
 }
 
-void TypeChecker::visitEPlus(EPlus *eplus)
-{
-  /* Code For EPlus Goes Here */
-
-  eplus->exp_1->accept(this);
-  eplus->exp_2->accept(this);
-
+void TypeChecker::visitEDiv(EDiv *ediv) {
+  m_env->setTemp(new Datatype(checkOperands(Operation::Div, ediv->exp_1, ediv->exp_2)));
 }
 
-void TypeChecker::visitEMinus(EMinus *eminus)
-{
-  /* Code For EMinus Goes Here */
+void TypeChecker::visitEPlus(EPlus *eplus) {
+  m_env->setTemp(new Datatype(checkOperands(Operation::Add, eplus->exp_1, eplus->exp_2)));
+}
 
-  eminus->exp_1->accept(this);
-  eminus->exp_2->accept(this);
-
+void TypeChecker::visitEMinus(EMinus *eminus) {
+  m_env->setTemp(new Datatype(checkOperands(Operation::Sub, eminus->exp_1, eminus->exp_2)));
 }
 
 void TypeChecker::visitELt(ELt *elt)
 {
-  /* Code For ELt Goes Here */
-
-  elt->exp_1->accept(this);
-  elt->exp_2->accept(this);
-
+  checkOperands(Operation::Ineq, elt->exp_1, elt->exp_2);
+  m_env->setTemp(new Datatype(Datatype::Bool));
 }
 
 void TypeChecker::visitEGt(EGt *egt)
 {
-  /* Code For EGt Goes Here */
-
-  egt->exp_1->accept(this);
-  egt->exp_2->accept(this);
-
+  checkOperands(Operation::Ineq, egt->exp_1, egt->exp_2);
+  m_env->setTemp(new Datatype(Datatype::Bool));
 }
 
 void TypeChecker::visitELtEq(ELtEq *elteq)
 {
-  /* Code For ELtEq Goes Here */
-
-  elteq->exp_1->accept(this);
-  elteq->exp_2->accept(this);
-
+  checkOperands(Operation::Ineq, elteq->exp_1, elteq->exp_2);
+  m_env->setTemp(new Datatype(Datatype::Bool));
 }
 
 void TypeChecker::visitEGtEq(EGtEq *egteq)
 {
-  /* Code For EGtEq Goes Here */
-
-  egteq->exp_1->accept(this);
-  egteq->exp_2->accept(this);
-
+  checkOperands(Operation::Ineq, egteq->exp_1, egteq->exp_2);
+  m_env->setTemp(new Datatype(Datatype::Bool));
 }
 
 void TypeChecker::visitEEq(EEq *eeq)
 {
-  /* Code For EEq Goes Here */
-
-  eeq->exp_1->accept(this);
-  eeq->exp_2->accept(this);
-
+  checkOperands(Operation::Eq, eeq->exp_1, eeq->exp_2);
+  m_env->setTemp(new Datatype(Datatype::Bool));
 }
 
 void TypeChecker::visitENEq(ENEq *eneq)
 {
-  /* Code For ENEq Goes Here */
-
-  eneq->exp_1->accept(this);
-  eneq->exp_2->accept(this);
-
+  checkOperands(Operation::Eq, eneq->exp_1, eneq->exp_2);
+  m_env->setTemp(new Datatype(Datatype::Bool));
 }
 
 void TypeChecker::visitEAnd(EAnd *eand)
 {
-  /* Code For EAnd Goes Here */
-
-  eand->exp_1->accept(this);
-  eand->exp_2->accept(this);
-
+  m_env->setTemp(new Datatype(checkOperands(Operation::Logic, eand->exp_1, eand->exp_2)));
 }
 
 void TypeChecker::visitEOr(EOr *eor)
 {
-  /* Code For EOr Goes Here */
-
-  eor->exp_1->accept(this);
-  eor->exp_2->accept(this);
-
+  m_env->setTemp(new Datatype(checkOperands(Operation::Logic, eor->exp_1, eor->exp_2)));
 }
 
 void TypeChecker::visitEAss(EAss *eass)
 {
-  /* Code For EAss Goes Here */
-
-  eass->exp_1->accept(this);
-  eass->exp_2->accept(this);
-
+  m_env->setTemp(new Datatype(checkOperands(Operation::Assign, eass->exp_1, eass->exp_2)));
 }
 
 void TypeChecker::visitETyped(ETyped *etyped)
 {
-  /* Code For ETyped Goes Here */
+  // TODO: \TBI
+  error(etyped, "Not implemented!");
 
   etyped->exp_->accept(this);
   etyped->type_->accept(this);
-
 }
 
 void TypeChecker::visitType_bool(Type_bool *type_bool)
@@ -395,7 +410,6 @@ void TypeChecker::visitType_string(Type_string *type_string)
 {
   m_env->setTemp(new Datatype(Datatype::String));
 }
-
 
 void TypeChecker::visitListDef(ListDef* listdef)
 {
@@ -427,10 +441,14 @@ void TypeChecker::visitListStm(ListStm* liststm)
 
 void TypeChecker::visitListExp(ListExp* listexp)
 {
-  for (ListExp::iterator i = listexp->begin() ; i != listexp->end() ; ++i)
-  {
-    (*i)->accept(this);
+  auto exprTypes = new std::vector<Datatype>();
+  for (ListExp::iterator i = listexp->begin() ; i != listexp->end() ; ++i) {
+    Datatype exprType;
+    if(m_env->visit(*i, this, &exprType)){
+      exprTypes->push_back(exprType);
+    } else crash();
   }
+  m_env->setTemp(exprTypes);
 }
 
 void TypeChecker::visitListId(ListId* listid)

@@ -8,5 +8,9 @@ Variable const* Scope::lookupVariable(std::string const& name) {
 bool Scope::registerVariable(Variable const& variable) {
 	if(lookupVariable(variable.name) == nullptr) {
 		m_vars[variable.name] = variable;
-	} else return false;
+		return true;
+	} else {
+		// Var already exists.
+		return false;
+	}
 }

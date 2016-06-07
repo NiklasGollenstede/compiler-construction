@@ -3,12 +3,26 @@
 
 #include "common.h"
 #include "cpp.build/Absyn.H"
+#include "datatype.h"
 
 class Env;
+
+enum class Operation {
+  Add,
+  Sub,
+  Mul,
+  Div,
+  Eq,
+  Ineq,
+  Assign,
+  Logic
+};
 
 class TypeChecker : public Visitor {
 private:
 	Env* m_env;
+	void checkExprType(Exp *expr, Datatype type, std::string const& errmsg);
+	Datatype checkOperands(Operation op, Exp *lhs, Exp *rhs);
 
 public:
 	TypeChecker();
