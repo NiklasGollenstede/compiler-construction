@@ -2,16 +2,8 @@ bool greater_than(int lhs, int rhs) {
 	return lhs > rhs;
 }
 
-int to_int(string s) {
-	return 1;
-}
-
-double to_double(string s) {
-	return 1.0;
-}
-
 string to_string(int i) {
-	return "a number";
+	return "NUMBER";
 }
 
 void test_operand_types() {

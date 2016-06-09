@@ -31,17 +31,15 @@ void TypeChecker::visitDFun(DFun *dfun)
 
   // Visit datatype.
   Datatype returnType;
-  if(m_env->visit(dfun->type_, this, &returnType)) {
-    fn.returnType = returnType;
-  } else crash(dfun->type_);
+  m_env->visit(dfun->type_, this, &returnType);
+  fn.returnType = returnType;
 
   visitId(dfun->id_);
 
   // Visit argument list.
   std::vector<Variable> args;
-  if(m_env->visit(dfun->listarg_, this, &args)) {
-    fn.args = args;
-  } else crash();
+  m_env->visit(dfun->listarg_, this, &args);
+  fn.args = args;
 
   // Register new function and create fn scope.
   m_env->registerFunction(fn);
@@ -65,9 +63,8 @@ void TypeChecker::visitADecl(ADecl *adecl)
   auto arg = new Variable();
 
   Datatype type;
-  if(m_env->visit(adecl->type_, this, &type)) {
-    arg->type = type;
-  } else crash(adecl->type_);
+  m_env->visit(adecl->type_, this, &type);
+  arg->type = type;
 
   visitId(adecl->id_);
   arg->name = adecl->id_;
@@ -83,19 +80,17 @@ void TypeChecker::visitSExp(SExp *sexp)
 void TypeChecker::visitSDecls(SDecls *sdecls)
 {
   Datatype type;
-  if(m_env->visit(sdecls->type_, this, &type)) {
+  m_env->visit(sdecls->type_, this, &type);
 
-    if(type == Datatype::Void){
-      error(sdecls, "Variable of type void is not allowed.");
-    }
+  if(type == Datatype::Void){
+    error(sdecls, "Variable of type void is not allowed.");
+  }
 
-    std::vector<std::string> names;
-    if(m_env->visit(sdecls->listid_, this, &names)) {
-      for(auto name : names) {
-        if(!m_env->registerVariable(Variable { type, name })){
-          error(sdecls, "Redefined variable " + name + ".");
-        }
-      }
+  std::vector<std::string> names;
+  m_env->visit(sdecls->listid_, this, &names);
+  for(auto name : names) {
+    if(!m_env->registerVariable(Variable { type, name })) {
+      error(sdecls, "Redefined variable " + name + ".");
     }
   }
 }
@@ -103,11 +98,12 @@ void TypeChecker::visitSDecls(SDecls *sdecls)
 void TypeChecker::visitSInit(SInit *sinit)
 {
   Datatype varType, exprType;
-  if(m_env->visit(sinit->type_, this, &varType) && m_env->visit(sinit->exp_, this, &exprType)){
-    if(varType != exprType) {
-      error(sinit, "Variable initialization type mismatch.");
-    }
-  } else crash();
+  m_env->visit(sinit->type_, this, &varType);
+  m_env->visit(sinit->exp_, this, &exprType);
+
+  if(varType != exprType) {
+    error(sinit, "Variable initialization type mismatch.");
+  }
 
   if(varType == Datatype::Void){
     error(sinit, "Variable of type void is not allowed.");
@@ -124,17 +120,17 @@ void TypeChecker::visitSInit(SInit *sinit)
 void TypeChecker::visitSReturn(SReturn *sreturn)
 {
   Datatype exprType;
-  if(m_env->visit(sreturn->exp_, this, &exprType)) {
-    if(exprType != m_env->getLastFunction().returnType) {
-      error(
-        sreturn,
-        "Returning "
-          + Datatypes::get(exprType)
-          + " instead of "
-          + Datatypes::get(m_env->getLastFunction().returnType)
-          + ".");
-    }
-  } else crash(sreturn->exp_);
+  m_env->visit(sreturn->exp_, this, &exprType);
+
+  if(exprType != m_env->getLastFunction().returnType) {
+    error(
+      sreturn,
+      "Returning "
+        + Datatypes::get(exprType)
+        + " instead of "
+        + Datatypes::get(m_env->getLastFunction().returnType)
+        + ".");
+  }
 }
 
 void TypeChecker::visitSReturnVoid(SReturnVoid *sreturnvoid)
@@ -146,11 +142,10 @@ void TypeChecker::visitSReturnVoid(SReturnVoid *sreturnvoid)
 
 void TypeChecker::checkExprType(Exp *expr, Datatype type, std::string const& errmsg){
   Datatype exprType;
-  if(m_env->visit(expr, this, &exprType)){
-    if(exprType != type){
-      error(expr, errmsg);
-    }
-  } else crash();
+  m_env->visit(expr, this, &exprType);
+  if(exprType != type){
+    error(expr, errmsg);
+  }
 }
 
 void TypeChecker::visitSWhile(SWhile *swhile)
@@ -223,23 +218,23 @@ void TypeChecker::visitEApp(EApp *eapp)
   }
 
   std::vector<Datatype> argtypes;
-  if(m_env->visit(eapp->listexp_, this, &argtypes)){
-    auto expected = func->args.size();
-    auto supplied = argtypes.size();
-    if(expected != supplied){
-      error(
-        eapp,
-        "Function " + name + " expects " + std::to_string(expected)
-        + " arguments, but " + std::to_string(supplied) + " were supplied."
-      );
-    }
+  m_env->visit(eapp->listexp_, this, &argtypes);
 
-    for(int i=0; i<argtypes.size(); ++i){
-      if(argtypes[i] != func->args[i].type){
-        error(eapp, "Function argument type mismatch.");
-      }
+  auto expected = func->args.size();
+  auto supplied = argtypes.size();
+  if(expected != supplied){
+    error(
+      eapp,
+      "Function " + name + " expects " + std::to_string(expected)
+      + " arguments, but " + std::to_string(supplied) + " were supplied."
+    );
+  }
+
+  for(int i=0; i<argtypes.size(); ++i){
+    if(argtypes[i] != func->args[i].type){
+      error(eapp, "Function argument type mismatch.");
     }
-  } else crash();
+  }
 
   m_env->setTemp(enum_new(func->returnType));
 }
@@ -271,50 +266,50 @@ void TypeChecker::visitEDecr(EDecr *edecr)
 Datatype TypeChecker::checkOperands(Operation op, Exp *lhs, Exp *rhs) {
   Datatype lhs_type, rhs_type, type;
 
-  if(m_env->visit(lhs, this, &lhs_type) && m_env->visit(rhs, this, &rhs_type)) {
+  m_env->visit(lhs, this, &lhs_type);
+  m_env->visit(rhs, this, &rhs_type);
 
-    // Enforce same type.
-    if(lhs_type != rhs_type) {
-      error(
-        lhs,
-        "Operands to arithmetic operation must be of the same type. (Got "
-          + Datatypes::get(lhs_type) + ", "
-          + Datatypes::get(rhs_type) + ")"
-      );
-    }
+  // Enforce same type.
+  if(lhs_type != rhs_type) {
+    error(
+      lhs,
+      "Operands to arithmetic operation must be of the same type. (Got "
+        + Datatypes::get(lhs_type) + ", "
+        + Datatypes::get(rhs_type) + ")"
+    );
+  }
 
-    type = lhs_type;
+  type = lhs_type;
 
-    switch(op) {
+  switch(op) {
 
-      case Operation::Logic:
-        if(type != Datatype::Bool) {
-          error(
-            lhs, 
-            "Logical operator needs boolean operands. (Got " 
-            + Datatypes::get(type) + ")"
-          );
-        }
-      break;
+    case Operation::Logic:
+      if(type != Datatype::Bool) {
+        error(
+          lhs, 
+          "Logical operator needs boolean operands. (Got " 
+          + Datatypes::get(type) + ")"
+        );
+      }
+    break;
 
-      case Operation::Sub:
-      case Operation::Mul:
-      case Operation::Div:
-        if(type == Datatype::String) {
-          error(lhs, "String type only supports concatenation ('+' operator).");
-        }
+    case Operation::Sub:
+    case Operation::Mul:
+    case Operation::Div:
+      if(type == Datatype::String) {
+        error(lhs, "String type only supports concatenation ('+' operator).");
+      }
 
-      case Operation::Add:
-      case Operation::Ineq:
-        if(type == Datatype::Bool) {
-          error(lhs, "Boolean type only supports logical operations ('||', '&&' operators).");
-        }
+    case Operation::Add:
+    case Operation::Ineq:
+      if(type == Datatype::Bool) {
+        error(lhs, "Boolean type only supports logical operations ('||', '&&' operators).");
+      }
 
-      case Operation::Eq:
-      case Operation::Assign:
-      break;
-    }
-  } else crash();
+    case Operation::Eq:
+    case Operation::Assign:
+    break;
+  }
 
   return type;
 }
@@ -433,9 +428,8 @@ void TypeChecker::visitListArg(ListArg* listarg)
   auto arguments = new std::vector<Variable>();
   for (ListArg::iterator i = listarg->begin(); i != listarg->end(); ++i) {
     Variable arg;
-    if(m_env->visit(*i, this, &arg)) {
-      arguments->push_back(arg);
-    } else crash();
+    m_env->visit(*i, this, &arg);
+    arguments->push_back(arg);
   }
   m_env->setTemp(arguments);
 }
@@ -453,9 +447,8 @@ void TypeChecker::visitListExp(ListExp* listexp)
   auto exprTypes = new std::vector<Datatype>();
   for (ListExp::iterator i = listexp->begin() ; i != listexp->end() ; ++i) {
     Datatype exprType;
-    if(m_env->visit(*i, this, &exprType)){
-      exprTypes->push_back(exprType);
-    } else crash();
+    m_env->visit(*i, this, &exprType);
+    exprTypes->push_back(exprType);
   }
   m_env->setTemp(exprTypes);
 }
@@ -468,7 +461,6 @@ void TypeChecker::visitListId(ListId* listid)
   }
   m_env->setTemp(ids);
 }
-
 
 void TypeChecker::visitId(Id x)
 {

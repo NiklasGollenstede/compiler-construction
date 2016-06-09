@@ -8,6 +8,7 @@ OBJECTS    = obj/absyn.o \
 			 obj/env.o \
 			 obj/type_checker.o \
 			 obj/main.o
+BNFCDIR    = cpp.build
 EXECUTABLE = tccpp
 TESTFILE   = test.cpp
 
@@ -21,20 +22,20 @@ clean:
 	rm -f obj/scope.o obj/env.o obj/type_checker.o obj/main.o
 
 clean-all:
-	rm -r obj ${EXECUTABLE}
-	mkdir -p obj
+	rm -r obj 
+	rm ${EXECUTABLE}
 
 init:
 	mkdir -p obj
 
 obj/absyn.o:
-	$(CXX) $(CXXF) cpp.build/Absyn.C -o $@
+	$(CXX) $(CXXF) ${BNFCDIR}/Absyn.C -o $@
 
 obj/lexer.o:
-	$(CXX) $(CXXF) cpp.build/Lexer.C -o $@
+	$(CXX) $(CXXF) ${BNFCDIR}/Lexer.C -o $@
 
 obj/parser.o:
-	$(CXX) $(CXXF) cpp.build/Parser.C -o $@
+	$(CXX) $(CXXF) ${BNFCDIR}/Parser.C -o $@
 
 obj/scope.o:
 	$(CXX) $(CXXF) scope.cc -o $@
