@@ -230,10 +230,26 @@ void TypeChecker::visitEApp(EApp *eapp)
     );
   }
 
+  bool argsMatch = true;
   for(int i=0; i<argtypes.size(); ++i){
     if(argtypes[i] != func->args[i].type){
-      error(eapp, "Function argument type mismatch.");
+      argsMatch = false;
+      break;
     }
+  }
+
+  if(!argsMatch) {
+    std::string errmsg = "Function " + name + " expects arguments (";
+    for(auto const& argument : func->args) {
+      errmsg += Datatypes::get(argument.type) + ", ";
+    }
+    errmsg += ") but got (";
+    for(auto const& type : argtypes) {
+      errmsg += Datatypes::get(type) + ", ";
+    }
+    errmsg += ").";
+
+    error(eapp, errmsg);
   }
 
   m_env->setTemp(enum_new(func->returnType));
