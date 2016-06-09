@@ -11,7 +11,7 @@ OBJECTS    = obj/absyn.o \
 EXECUTABLE = typechecker
 TESTFILE   = test.cpp
 
-run: clean $(EXECUTABLE)
+run: $(EXECUTABLE)
 	./${EXECUTABLE} ${TESTFILE}
 
 clean:
