@@ -8,8 +8,11 @@ OBJECTS    = obj/absyn.o \
 			 obj/env.o \
 			 obj/type_checker.o \
 			 obj/main.o
-EXECUTABLE = typechecker
+EXECUTABLE = tccpp
 TESTFILE   = test.cpp
+
+$(EXECUTABLE): init $(OBJECTS) 
+	$(CXX) ${LDF} -o $@ ${OBJECTS}
 
 run: $(EXECUTABLE)
 	./${EXECUTABLE} ${TESTFILE}
@@ -19,13 +22,10 @@ clean:
 
 clean-all:
 	rm -r obj ${EXECUTABLE}
-	mkdir obj
+	mkdir -p obj
 
 init:
-	mkdir obj
-    
-$(EXECUTABLE): $(OBJECTS) 
-	$(CXX) ${LDF} -o $@ ${OBJECTS}
+	mkdir -p obj
 
 obj/absyn.o:
 	$(CXX) $(CXXF) cpp.build/Absyn.C -o $@

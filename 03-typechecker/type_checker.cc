@@ -47,6 +47,11 @@ void TypeChecker::visitDFun(DFun *dfun)
   m_env->registerFunction(fn);
   m_env->pushScope();
 
+  // Register function parameters as local variables.
+  for(auto const& arg : args) {
+    m_env->registerVariable(arg);
+  }
+
   // Visit function body.
   m_env->visit(dfun->liststm_, this);
 
@@ -170,30 +175,30 @@ void TypeChecker::visitSIfElse(SIfElse *sifelse)
 
 void TypeChecker::visitETrue(ETrue *etrue)
 {
-  m_env->setTemp(new Datatype(Datatype::Bool));
+  m_env->setTemp(enum_new(Datatype::Bool));
 }
 
 void TypeChecker::visitEFalse(EFalse *efalse)
 {
-  m_env->setTemp(new Datatype(Datatype::Bool));
+  m_env->setTemp(enum_new(Datatype::Bool));
 }
 
 void TypeChecker::visitEInt(EInt *eint)
 {
   visitInteger(eint->integer_);
-  m_env->setTemp(new Datatype(Datatype::Int));
+  m_env->setTemp(enum_new(Datatype::Int));
 }
 
 void TypeChecker::visitEDouble(EDouble *edouble)
 {
   visitDouble(edouble->double_);
-  m_env->setTemp(new Datatype(Datatype::Double));
+  m_env->setTemp(enum_new(Datatype::Double));
 }
 
 void TypeChecker::visitEString(EString *estring)
 {
   visitString(estring->string_);
-  m_env->setTemp(new Datatype(Datatype::String));
+  m_env->setTemp(enum_new(Datatype::String));
 }
 
 void TypeChecker::visitEId(EId *eid)
@@ -203,7 +208,7 @@ void TypeChecker::visitEId(EId *eid)
   auto var  = m_env->lookupVariable(name);
 
   if(var != nullptr) {
-    m_env->setTemp(new Datatype(var->type));
+    m_env->setTemp(enum_new(var->type));
   } else error(eid, "Variable " + name + " undefined.");
 }
 
@@ -236,31 +241,31 @@ void TypeChecker::visitEApp(EApp *eapp)
     }
   } else crash();
 
-  m_env->setTemp(new Datatype(func->returnType));
+  m_env->setTemp(enum_new(func->returnType));
 }
 
 void TypeChecker::visitEPIncr(EPIncr *epincr)
 {
   checkExprType(epincr->exp_, Datatype::Int, "Increment operator expects integer.");
-  m_env->setTemp(new Datatype(Datatype::Int));
+  m_env->setTemp(enum_new(Datatype::Int));
 }
 
 void TypeChecker::visitEPDecr(EPDecr *epdecr)
 {
   checkExprType(epdecr->exp_, Datatype::Int, "Decrement operator expects integer.");
-  m_env->setTemp(new Datatype(Datatype::Int));
+  m_env->setTemp(enum_new(Datatype::Int));
 }
 
 void TypeChecker::visitEIncr(EIncr *eincr)
 {
   checkExprType(eincr->exp_, Datatype::Int, "Increment operator expects integer.");
-  m_env->setTemp(new Datatype(Datatype::Int));
+  m_env->setTemp(enum_new(Datatype::Int));
 }
 
 void TypeChecker::visitEDecr(EDecr *edecr)
 {
   checkExprType(edecr->exp_, Datatype::Int, "Decrement operator expects integer.");
-  m_env->setTemp(new Datatype(Datatype::Int));
+  m_env->setTemp(enum_new(Datatype::Int));
 }
 
 Datatype TypeChecker::checkOperands(Operation op, Exp *lhs, Exp *rhs) {
@@ -272,7 +277,7 @@ Datatype TypeChecker::checkOperands(Operation op, Exp *lhs, Exp *rhs) {
     if(lhs_type != rhs_type) {
       error(
         lhs,
-        "Operand type mismatch. ("
+        "Operands to arithmetic operation must be of the same type. (Got "
           + Datatypes::get(lhs_type) + ", "
           + Datatypes::get(rhs_type) + ")"
       );
@@ -284,7 +289,11 @@ Datatype TypeChecker::checkOperands(Operation op, Exp *lhs, Exp *rhs) {
 
       case Operation::Logic:
         if(type != Datatype::Bool) {
-          error(lhs, "Logical operator needs boolean operands.");
+          error(
+            lhs, 
+            "Logical operator needs boolean operands. (Got " 
+            + Datatypes::get(type) + ")"
+          );
         }
       break;
 
@@ -292,13 +301,13 @@ Datatype TypeChecker::checkOperands(Operation op, Exp *lhs, Exp *rhs) {
       case Operation::Mul:
       case Operation::Div:
         if(type == Datatype::String) {
-          error(lhs, "Strings only support addition.");
+          error(lhs, "String type only supports concatenation ('+' operator).");
         }
 
       case Operation::Add:
       case Operation::Ineq:
         if(type == Datatype::Bool) {
-          error(lhs, "Boolean type does not support arithmetics.");
+          error(lhs, "Boolean type only supports logical operations ('||', '&&' operators).");
         }
 
       case Operation::Eq:
@@ -311,70 +320,70 @@ Datatype TypeChecker::checkOperands(Operation op, Exp *lhs, Exp *rhs) {
 }
 
 void TypeChecker::visitETimes(ETimes *etimes) {
-  m_env->setTemp(new Datatype(checkOperands(Operation::Mul, etimes->exp_1, etimes->exp_2)));
+  m_env->setTemp(enum_new(checkOperands(Operation::Mul, etimes->exp_1, etimes->exp_2)));
 }
 
 void TypeChecker::visitEDiv(EDiv *ediv) {
-  m_env->setTemp(new Datatype(checkOperands(Operation::Div, ediv->exp_1, ediv->exp_2)));
+  m_env->setTemp(enum_new(checkOperands(Operation::Div, ediv->exp_1, ediv->exp_2)));
 }
 
 void TypeChecker::visitEPlus(EPlus *eplus) {
-  m_env->setTemp(new Datatype(checkOperands(Operation::Add, eplus->exp_1, eplus->exp_2)));
+  m_env->setTemp(enum_new(checkOperands(Operation::Add, eplus->exp_1, eplus->exp_2)));
 }
 
 void TypeChecker::visitEMinus(EMinus *eminus) {
-  m_env->setTemp(new Datatype(checkOperands(Operation::Sub, eminus->exp_1, eminus->exp_2)));
+  m_env->setTemp(enum_new(checkOperands(Operation::Sub, eminus->exp_1, eminus->exp_2)));
 }
 
 void TypeChecker::visitELt(ELt *elt)
 {
   checkOperands(Operation::Ineq, elt->exp_1, elt->exp_2);
-  m_env->setTemp(new Datatype(Datatype::Bool));
+  m_env->setTemp(enum_new(Datatype::Bool));
 }
 
 void TypeChecker::visitEGt(EGt *egt)
 {
   checkOperands(Operation::Ineq, egt->exp_1, egt->exp_2);
-  m_env->setTemp(new Datatype(Datatype::Bool));
+  m_env->setTemp(enum_new(Datatype::Bool));
 }
 
 void TypeChecker::visitELtEq(ELtEq *elteq)
 {
   checkOperands(Operation::Ineq, elteq->exp_1, elteq->exp_2);
-  m_env->setTemp(new Datatype(Datatype::Bool));
+  m_env->setTemp(enum_new(Datatype::Bool));
 }
 
 void TypeChecker::visitEGtEq(EGtEq *egteq)
 {
   checkOperands(Operation::Ineq, egteq->exp_1, egteq->exp_2);
-  m_env->setTemp(new Datatype(Datatype::Bool));
+  m_env->setTemp(enum_new(Datatype::Bool));
 }
 
 void TypeChecker::visitEEq(EEq *eeq)
 {
   checkOperands(Operation::Eq, eeq->exp_1, eeq->exp_2);
-  m_env->setTemp(new Datatype(Datatype::Bool));
+  m_env->setTemp(enum_new(Datatype::Bool));
 }
 
 void TypeChecker::visitENEq(ENEq *eneq)
 {
   checkOperands(Operation::Eq, eneq->exp_1, eneq->exp_2);
-  m_env->setTemp(new Datatype(Datatype::Bool));
+  m_env->setTemp(enum_new(Datatype::Bool));
 }
 
 void TypeChecker::visitEAnd(EAnd *eand)
 {
-  m_env->setTemp(new Datatype(checkOperands(Operation::Logic, eand->exp_1, eand->exp_2)));
+  m_env->setTemp(enum_new(checkOperands(Operation::Logic, eand->exp_1, eand->exp_2)));
 }
 
 void TypeChecker::visitEOr(EOr *eor)
 {
-  m_env->setTemp(new Datatype(checkOperands(Operation::Logic, eor->exp_1, eor->exp_2)));
+  m_env->setTemp(enum_new(checkOperands(Operation::Logic, eor->exp_1, eor->exp_2)));
 }
 
 void TypeChecker::visitEAss(EAss *eass)
 {
-  m_env->setTemp(new Datatype(checkOperands(Operation::Assign, eass->exp_1, eass->exp_2)));
+  m_env->setTemp(enum_new(checkOperands(Operation::Assign, eass->exp_1, eass->exp_2)));
 }
 
 void TypeChecker::visitETyped(ETyped *etyped)
@@ -388,27 +397,27 @@ void TypeChecker::visitETyped(ETyped *etyped)
 
 void TypeChecker::visitType_bool(Type_bool *type_bool)
 {
-  m_env->setTemp(new Datatype(Datatype::Bool));
+  m_env->setTemp(enum_new(Datatype::Bool));
 }
 
 void TypeChecker::visitType_int(Type_int *type_int)
 {
-  m_env->setTemp(new Datatype(Datatype::Int));
+  m_env->setTemp(enum_new(Datatype::Int));
 }
 
 void TypeChecker::visitType_double(Type_double *type_double)
 {
-  m_env->setTemp(new Datatype(Datatype::Double));
+  m_env->setTemp(enum_new(Datatype::Double));
 }
 
 void TypeChecker::visitType_void(Type_void *type_void)
 {
-  m_env->setTemp(new Datatype(Datatype::Void));
+  m_env->setTemp(enum_new(Datatype::Void));
 }
 
 void TypeChecker::visitType_string(Type_string *type_string)
 {
-  m_env->setTemp(new Datatype(Datatype::String));
+  m_env->setTemp(enum_new(Datatype::String));
 }
 
 void TypeChecker::visitListDef(ListDef* listdef)

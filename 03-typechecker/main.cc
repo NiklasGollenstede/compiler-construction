@@ -2,19 +2,36 @@
 #include "cpp.build/Parser.H"
 
 int main(int argc, char const** argv) {
+	
+	// Wrong usage.
 	if(argc != 2) {
-		LOG("Usage: typechecker source.cpp");
-	} else {
+		std::cerr << "Usage: tccpp source.cpp" << std::endl;
+	} 
+
+	// Open specified input file.
+	else {
 		FILE* file = fopen(argv[1], "r");
 		if(file == nullptr) {
-			LOG("Could not open source file.");
-		} else {
+			std::cerr << "FILE NOT FOUND" << std::endl;
+		} 
+
+		else {
 			Program* program = pProgram(file);
-			LOG("Invoking typechecker on source file: " << argv[1]);
-			TypeChecker checker;
-			checker.visitProgram(program);
-			LOG("Done.");
-			delete program;
+			if(program == nullptr) {
+				std::cerr << "SYNTAX ERROR" << std::endl;
+			} 
+
+			else try {
+				TypeChecker checker;
+				checker.visitProgram(program);
+				std::cout << "OK" << std::endl;
+				delete program;
+
+			} catch(std::exception const& e) {
+					std::cerr << "TYPE ERROR" << std::endl;
+					std::cerr << e.what() << std::endl;
+					delete program;
+			}
 		}
 	}
 }

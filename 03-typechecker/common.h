@@ -13,8 +13,13 @@
 #define ASSERT_EQ(v0, v1)    assert((v0) == (v1))
 #define ASSERT_NULL(ptr)     assert((ptr) == nullptr)
 #define ASSERT_NOT_NULL(ptr) assert((ptr) != nullptr)
-#define LOG(message)         std::cout << message << std::endl
 #define EXCEPT(message)      throw std::runtime_error((message))
+
+// Create an instance of enum E on the heap.
+template<typename E>
+E* enum_new(E enumval) {
+	return new E(enumval);
+}
 
 // Throw an exception containing the given node's line position and description.
 template<typename T>
