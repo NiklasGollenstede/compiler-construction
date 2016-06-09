@@ -4,19 +4,9 @@
 #include "common.h"
 #include "cpp.build/Absyn.H"
 #include "datatype.h"
+#include "operation.h"
 
 class Env;
-
-enum class Operation {
-  Add,
-  Sub,
-  Mul,
-  Div,
-  Eq,
-  Ineq,
-  Assign,
-  Logic
-};
 
 class TypeChecker : public Visitor {
 private:
@@ -26,6 +16,8 @@ private:
 
 public:
 	TypeChecker();
+
+	inline Env* getEnv() { return m_env; }
 
 	void visitProgram(Program* p);
 	void visitDef(Def* p);

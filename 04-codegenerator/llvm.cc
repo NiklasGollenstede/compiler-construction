@@ -4,14 +4,6 @@
 
 #define MODULE_NAME test
 
-LLVMModuleRef createModule(std::string const& name) {
-	return LLVMModuleCreateWithName(name.c_str());
-}
-
-LLVMTypeRef createDatatype(Datatype type) {
-	
-}
-
 int main (int argc, char const *argv[]) {
 
   char *error = nullptr;
@@ -20,7 +12,7 @@ int main (int argc, char const *argv[]) {
   LLVMModuleRef mod = LLVMModuleCreateWithName(MODULE_NAME);
 
   LLVMTypeRef fac_args[] = { LLVMInt32Type() };
-  LLVMValueRef fac = LLVMAddFunction(mod, "fac", LLVMFunctionType(LLVMInt32Type(), fac_args, 1, 0));
+  LLVMValueRef fac = LLVMAddFunction(mod, "main", LLVMFunctionType(LLVMVoidType(), nullptr, 0, 0));
   LLVMSetFunctionCallConv(fac, LLVMCCallConv);
   LLVMValueRef n = LLVMGetParam(fac, 0);
 

@@ -49,7 +49,7 @@ void test_operand_types() {
 	s1 = "world";
 	s0 + s1 + to_string(i0);
 
-	if(greater_than(i0, b0)) {
+	if(greater_than(i0, i1)) {
 		while(true) {
 			to_string(0);
 		}

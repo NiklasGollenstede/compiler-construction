@@ -1,4 +1,5 @@
 #include "type_checker.h"
+#include "llvm_ir_gen.h"
 #include "cpp.build/Parser.H"
 
 int main(int argc, char const** argv) {
@@ -22,8 +23,14 @@ int main(int argc, char const** argv) {
 			} 
 
 			else try {
+				// Typecheck program.
 				TypeChecker checker;
 				checker.visitProgram(program);
+				
+				// Generate LLVM bitcode.
+				LLVMIRGen codegen("test", checker.getEnv());
+				codegen.visitProgram(program);
+
 				std::cout << "OK" << std::endl;
 				delete program;
 

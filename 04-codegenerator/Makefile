@@ -1,19 +1,22 @@
-CXX        = g++
-CXXF       = -c -g -std=gnu++11
-LDF        = -std=gnu++11
+CLANGCC    = clang++
+CLANGCCF   = -c -g -std=c++11 `llvm-config --cflags`
+CLANGLDF   = `llvm-config --cxxflags --ldflags --libs core executionengine jit interpreter analysis native bitwriter --system-libs`
+GNUCC      = g++
+GNUCCF     = -c -g -std=gnu++11
 OBJECTS    = obj/absyn.o \
 			 obj/lexer.o \
 			 obj/parser.o \
 			 obj/scope.o \
 			 obj/env.o \
 			 obj/type_checker.o \
+			 obj/llvm_ir_gen.o \
 			 obj/main.o
 BNFCDIR    = cpp.build
-EXECUTABLE = tccpp
+EXECUTABLE = codegen
 TESTFILE   = test.cpp
 
 $(EXECUTABLE): init $(OBJECTS) 
-	$(CXX) ${LDF} -o $@ ${OBJECTS}
+	$(CLANGCC) ${CLANGLDF} -o $@ ${OBJECTS}
 
 run: $(EXECUTABLE)
 	./${EXECUTABLE} ${TESTFILE}
@@ -23,28 +26,31 @@ clean:
 
 clean-all:
 	rm -r obj 
-	rm ${EXECUTABLE}
+	rm -f ${EXECUTABLE}
 
 init:
 	mkdir -p obj
 
 obj/absyn.o:
-	$(CXX) $(CXXF) ${BNFCDIR}/Absyn.C -o $@
+	$(GNUCC) $(GNUCCF) ${BNFCDIR}/Absyn.C -o $@
 
 obj/lexer.o:
-	$(CXX) $(CXXF) ${BNFCDIR}/Lexer.C -o $@
+	$(GNUCC) $(GNUCCF) ${BNFCDIR}/Lexer.C -o $@
 
 obj/parser.o:
-	$(CXX) $(CXXF) ${BNFCDIR}/Parser.C -o $@
+	$(GNUCC) $(GNUCCF) ${BNFCDIR}/Parser.C -o $@
 
 obj/scope.o:
-	$(CXX) $(CXXF) scope.cc -o $@
+	$(CLANGCC) $(CLANGCCF) scope.cc -o $@
 
 obj/env.o:
-	$(CXX) $(CXXF) env.cc -o $@
+	$(CLANGCC) $(CLANGCCF) env.cc -o $@
 
 obj/type_checker.o:
-	$(CXX) $(CXXF) type_checker.cc -o $@
+	$(CLANGCC) $(CLANGCCF) type_checker.cc -o $@
+
+obj/llvm_ir_gen.o:
+	$(CLANGCC) $(CLANGCCF) llvm_ir_gen.cc -o $@
 
 obj/main.o:
-	$(CXX) $(CXXF) main.cc -o $@
+	$(CLANGCC) $(CLANGCCF) main.cc -o $@

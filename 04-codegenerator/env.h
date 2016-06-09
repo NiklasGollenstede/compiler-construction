@@ -106,8 +106,8 @@ public:
 	}
 
 	// Visit a node that does not push a value to temp.
-	inline void visit(Visitable* v, TypeChecker* checker) {
-		v->accept(checker);
+	inline void visit(Visitable* v, Visitor* vis) {
+		v->accept(vis);
 	}
 
 	// Delete remaining scopes.
