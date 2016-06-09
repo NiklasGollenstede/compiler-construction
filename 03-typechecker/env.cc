@@ -48,16 +48,17 @@ void Env::pushScope() {
 
 bool Env::popScope() {
 	if(m_scopes.size() > 1) {
+		delete m_scopes.back();
 		m_scopes.pop_back();
 		return true;
 	} else return false;
 }
 
 Env::~Env() {
-	for(auto iter = m_scopes.rbegin(); iter != m_scopes.rend(); ++iter) {
-		if(*iter != nullptr) {
-			delete *iter;
-			*iter = nullptr;
-		}
-	}
+	// Pop function and block scopes.
+	while(popScope());
+
+	// Delete main scope.
+	delete m_scopes.front();
+	m_scopes.clear();
 }
