@@ -1,7 +1,6 @@
-CLANGCC    = clang++
-CLANGCCF   = -c -g -std=c++11 `llvm-config --cflags`
-CLANGLDF   = `llvm-config --cxxflags --ldflags --libs core executionengine jit interpreter analysis native bitwriter --system-libs`
-GNUCC      = g++
+CLANGCC    = clang++-3.7
+CLANGCCF   = -c -g `llvm-config-3.7 --cxxflags` -std=c++14 -fexceptions
+CLANGLDF   = `llvm-config-3.7 --cxxflags --ldflags --system-libs --libs core`
 GNUCCF     = -c -g -std=gnu++11
 OBJECTS    = obj/absyn.o \
 			 obj/lexer.o \
@@ -16,13 +15,13 @@ EXECUTABLE = codegen
 TESTFILE   = test.cpp
 
 $(EXECUTABLE): init $(OBJECTS) 
-	$(CLANGCC) ${CLANGLDF} -o $@ ${OBJECTS}
+	$(CLANGCC) -o $@ ${OBJECTS} ${CLANGLDF}
 
 run: $(EXECUTABLE)
 	./${EXECUTABLE} ${TESTFILE}
 
 clean:
-	rm -f obj/scope.o obj/env.o obj/type_checker.o obj/main.o
+	rm -f obj/scope.o obj/env.o obj/type_checker.o obj/llvm_ir_gen.o obj/main.o
 
 clean-all:
 	rm -r obj 

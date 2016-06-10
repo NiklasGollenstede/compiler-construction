@@ -1,44 +1,19 @@
 #include "llvm_ir_gen.h"
 
 LLVMIRGen::LLVMIRGen(std::string const& moduleName, Env* env)
-  :m_module(LLVMModuleCreateWithName(moduleName.c_str())),
-   m_env(env) {
+  :m_env(env),
+   m_builder(m_context),
+   m_module(new llvm::Module(moduleName, m_context)) {
 }
 
-LLVMTypeRef LLVMIRGen::createType(Datatype type) {
-  switch(type) {
-    case Datatype::Void:   return LLVMVoidType();
-    case Datatype::Bool:   return LLVMInt8Type();
-    case Datatype::Int:    return LLVMInt32Type();
-    case Datatype::Double: return LLVMDoubleType();
-    case Datatype::String: return LLVMPointerType(LLVMInt8Type());
-  }
+void LLVMIRGen::printModule() {
+  m_module->dump();
 }
 
-std::vector<LLVMTypeRef> LLVMIRGen::createTypeList(std::vector<Datatype> const& types) {
-  std::vector<LLVMTypeRef> list;
-  for(auto type : types) { list.push_back(createType(type)); }
-  return list;
+void LLVMIRGen::visitProgram(Program* t) { 
+  visitPDefs((PDefs *)t); 
 }
 
-void LLVMIRGen::createFunction(Function const& func) {
-  std::vector<Datatype> argTypes;
-  for(int i=0; i<func.args.size(); ++i) {
-    argTypes.push_back(func.args[i].type);
-  }
-  auto llvmArgTypes = createTypeList(argTypes);
-  LLVMAddFunction(
-    m_module, 
-    func.name.c_str(), 
-    LLVMFunctionType(
-      createType(func.returnType), 
-      &llvmArgTypes[0], 
-      llvmArgTypes.size(), 
-      0
-  ));
-}
-
-void LLVMIRGen::visitProgram(Program* t) { visitPDefs((PDefs *)t); m_module->print(std::cout); } // abstract class
 void LLVMIRGen::visitDef(Def* t) {} //abstract class
 void LLVMIRGen::visitArg(Arg* t) {} //abstract class
 void LLVMIRGen::visitStm(Stm* t) {} //abstract class
@@ -46,9 +21,12 @@ void LLVMIRGen::visitExp(Exp* t) {} //abstract class
 void LLVMIRGen::visitType(Type* t) {} // abstract class
 
 void LLVMIRGen::visitPDefs(PDefs *pdefs) {
+  m_env->visit(pdefs->listdef_, this);
 }
 
 void LLVMIRGen::visitDFun(DFun *dfun) {
+  auto func = m_env->lookupFunction(dfun->id_);
+  std::cout << "Generating code for function " << func->name << "." << std::endl;
 }
 
 void LLVMIRGen::visitADecl(ADecl *adecl) {
@@ -202,6 +180,6 @@ void LLVMIRGen::visitIdent(Ident x) {
 }
 
 LLVMIRGen::~LLVMIRGen() {
-  free(m_module);
+  delete m_module;
   m_module = nullptr;
 }

@@ -1,27 +1,36 @@
 #ifndef LLVM_IR_GEN_H
 #define LLVM_IR_GEN_H
 
-#include <llvm-c/Core.h>
-#include <llvm-c/Analysis.h>
-#include <llvm-c/ExecutionEngine.h>
-#include <llvm-c/Target.h>
-#include <llvm-c/Transforms/Scalar.h>
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Verifier.h"
 
 #include "common.h"
 #include "env.h"
 
 class LLVMIRGen : public Visitor {
 private:
-	LLVMModuleRef m_module;
+	// Environment passed on by typechecker.
 	Env* m_env;
 
-	LLVMTypeRef createType(Datatype type);
-	std::vector<LLVMTypeRef> createTypeList(std::vector<Datatype> const& types);
-	void createFunction(Function const& func);
+	llvm::LLVMContext m_context;
+	llvm::IRBuilder<> m_builder;
+	llvm::Module* m_module;
 
 public:
 	LLVMIRGen(std::string const& moduleName, Env* env);
 
+	void printModule();
+
+	// Auto-generated.
 	void visitProgram(Program* p);
 	void visitDef(Def* p);
 	void visitArg(Arg* p);
