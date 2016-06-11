@@ -1,6 +1,7 @@
 CLANGCC    = clang++-3.7
 CLANGCCF   = -c -g `llvm-config-3.7 --cxxflags` -std=c++14 -fexceptions
 CLANGLDF   = `llvm-config-3.7 --cxxflags --ldflags --system-libs --libs core`
+GNUCC      = g++
 GNUCCF     = -c -g -std=gnu++11
 OBJECTS    = obj/absyn.o \
 			 obj/lexer.o \
@@ -21,7 +22,7 @@ run: $(EXECUTABLE)
 	./${EXECUTABLE} ${TESTFILE}
 
 clean:
-	rm -f obj/scope.o obj/env.o obj/type_checker.o obj/llvm_ir_gen.o obj/main.o
+	rm -f obj/llvm_ir_gen.o obj/main.o
 
 clean-all:
 	rm -r obj 

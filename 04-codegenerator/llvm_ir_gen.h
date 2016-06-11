@@ -21,9 +21,18 @@ private:
 	// Environment passed on by typechecker.
 	Env* m_env;
 
+	llvm::Value* m_tempValue;
+
 	llvm::LLVMContext m_context;
 	llvm::IRBuilder<> m_builder;
 	llvm::Module* m_module;
+
+	llvm::Type* convertType(Datatype type);
+
+	// Visit functions.
+	void visit(Visitable* v);
+	void visit(Visitable* v, llvm::Value** value);
+	void store(llvm::Value* value);
 
 public:
 	LLVMIRGen(std::string const& moduleName, Env* env);

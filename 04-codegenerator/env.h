@@ -98,8 +98,8 @@ public:
 
 	// Returns value of getTemp after the node was visited.
 	template<typename T>
-	void visit(Visitable* v, TypeChecker* checker, T* out) {
-		v->accept(checker);
+	void visit(Visitable* v, Visitor* vis, T* out) {
+		v->accept(vis);
 		if(!getTemp<T>(out)) {
 			crash();
 		}
