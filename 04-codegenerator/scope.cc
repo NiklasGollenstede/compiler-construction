@@ -1,6 +1,6 @@
 #include "scope.h"
 
-Variable const* Scope::lookupVariable(std::string const& name) {
+Variable* Scope::lookupVariable(std::string const& name) {
 	if(m_vars.count(name)) return &m_vars[name];
 	else return nullptr;
 }

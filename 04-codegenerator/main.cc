@@ -1,11 +1,11 @@
 #include "type_checker.h"
-#include "llvm_ir_gen.h"
+#include "code_generator.h"
 #include "cpp.build/Parser.H"
 
-static FILE*       g_file;
-static Program*    g_program;
-static TypeChecker g_typechecker;
-static LLVMIRGen*  g_codegen;
+static FILE*           g_file;
+static Program*        g_program;
+static TypeChecker 	   g_typechecker;
+static CodeGenerator*  g_codegen;
 
 void cleanup() {
 
@@ -45,7 +45,7 @@ void typecheck() {
 void codegen() {
 	try {
 		std::cout << "GENERATING CODE" << std::endl;
-		g_codegen = new LLVMIRGen("test", g_typechecker.getEnv());
+		g_codegen = new CodeGenerator("test", g_typechecker.getEnv());
 		g_codegen->visitProgram(g_program);
 		std::cout << "OK" << std::endl;
 		std::cout << "BITCODE BELOW" << std::endl << std::endl;

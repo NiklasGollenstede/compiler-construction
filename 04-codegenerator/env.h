@@ -47,7 +47,7 @@ public:
 
 	// Returns the function that matches the specified name or
 	// nullptr if no such function was defined.
-	Function const* lookupFunction(std::string const& name);
+	Function* lookupFunction(std::string const& name);
 
 	// Registers a new function.
 	// Returns true on success or false, if a function
@@ -55,11 +55,11 @@ public:
 	bool registerFunction(Function const& function);
 
 	// Returns the last function defined.
-	Function const& getLastFunction();
+	Function& getLastFunction();
 
 	// Returns the variable declared in the tightest scope to the
 	// caller's context or nullptr if no such is defined.
-	Variable const* lookupVariable(std::string const& name);
+	Variable* lookupVariable(std::string const& name);
 
 	// Registers a new variable to the current scope.
 	// Returns true on success or false, if a variable definition

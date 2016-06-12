@@ -9,7 +9,7 @@ OBJECTS    = obj/absyn.o \
 			 obj/scope.o \
 			 obj/env.o \
 			 obj/type_checker.o \
-			 obj/llvm_ir_gen.o \
+			 obj/code_generator.o \
 			 obj/main.o
 BNFCDIR    = cpp.build
 EXECUTABLE = codegen
@@ -22,7 +22,7 @@ run: $(EXECUTABLE)
 	./${EXECUTABLE} ${TESTFILE}
 
 clean:
-	rm -f obj/llvm_ir_gen.o obj/main.o
+	rm -f obj/code_generator.o obj/main.o
 
 clean-all:
 	rm -r obj 
@@ -49,8 +49,8 @@ obj/env.o:
 obj/type_checker.o:
 	$(CLANGCC) $(CLANGCCF) type_checker.cc -o $@
 
-obj/llvm_ir_gen.o:
-	$(CLANGCC) $(CLANGCCF) llvm_ir_gen.cc -o $@
+obj/code_generator.o:
+	$(CLANGCC) $(CLANGCCF) code_generator.cc -o $@
 
 obj/main.o:
 	$(CLANGCC) $(CLANGCCF) main.cc -o $@

@@ -6,4 +6,5 @@ int main(int argc, string argv) {
 	return 1/2;
 	return 1+2*3+4;
 	return (1+2)*(3+4);
+	return argc = 3;
 }

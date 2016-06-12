@@ -7,7 +7,7 @@ Env::Env()
 	  m_temp(nullptr) { 
 }
 
-Function const* Env::lookupFunction(std::string const& name) {
+Function* Env::lookupFunction(std::string const& name) {
 	if(m_funcs.count(name)) return &m_funcs[name];
 	else return nullptr;
 }
@@ -20,12 +20,12 @@ bool Env::registerFunction(Function const& function) {
 	} else return false;
 }
 
-Function const& Env::getLastFunction() {
+Function& Env::getLastFunction() {
 	return m_lastFunc;
 }
 
-Variable const* Env::lookupVariable(std::string const& name) {
-	Variable const* result = nullptr;
+Variable* Env::lookupVariable(std::string const& name) {
+	Variable* result = nullptr;
 
 	// Search scopes, starting with innermost.
 	for(auto iter = m_scopes.rbegin(); iter != m_scopes.rend(); ++iter) {

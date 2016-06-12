@@ -10,7 +10,7 @@ private:
 
 public:
 	// Returns the variable or nullptr.
-	Variable const* lookupVariable(std::string const& name);
+	Variable* lookupVariable(std::string const& name);
 
 	// Returns false if name already exists.
 	bool registerVariable(Variable const& variable);
