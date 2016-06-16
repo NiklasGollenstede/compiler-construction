@@ -27,6 +27,9 @@ void error(T* node, std::string const& description) {
   EXCEPT("Error in line " + std::to_string(node->line_number) + ": " + description);
 }
 
+// Error w/o line information.
+inline void error(std::string const& description) { EXCEPT("Error: " + description); }
+
 // Throw a critical error w/ default message.
 inline void crash() { EXCEPT("A critical error occured."); }
 

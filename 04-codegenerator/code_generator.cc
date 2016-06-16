@@ -6,18 +6,18 @@ CodeGenerator::CodeGenerator(std::string const& moduleName, Env* env)
    m_module(new llvm::Module(moduleName, m_context)) {
 }
 
-/*
 llvm::Type* CodeGenerator::convertType(Datatype type) {
   switch(type) {
     case Datatype::Void:   return llvm::Type::getVoidTy(m_context);
     case Datatype::Bool:   return llvm::Type::getInt1Ty(m_context);
     case Datatype::Int:    return llvm::Type::getInt32Ty(m_context);
     case Datatype::Double: return llvm::Type::getDoubleTy(m_context);
-    case Datatype::String: return llvm::Type::getInt8PtrTy(m_context);
+    case Datatype::String: error("String type not supported.");
+    default:               return nullptr;
   }
 }
-*/
 
+/*
 llvm::Type* CodeGenerator::convertType(Datatype type) {
   switch(type) {
     case Datatype::Void: 
@@ -35,19 +35,7 @@ llvm::Type* CodeGenerator::convertType(Datatype type) {
       return nullptr;
   }
 }
-
-void CodeGenerator::visit(Visitable* v) {
-  v->accept(this);
-}
-
-void CodeGenerator::visit(Visitable* v, llvm::Value** value) {
-  v->accept(this);
-  *value = m_tempValue;
-}
-
-void CodeGenerator::store(llvm::Value* value) {
-  m_tempValue = value;
-}
+*/
 
 void CodeGenerator::printModule() {
   m_module->dump();
@@ -64,21 +52,31 @@ void CodeGenerator::visitExp(Exp* t) {} //abstract class
 void CodeGenerator::visitType(Type* t) {} // abstract class
 
 void CodeGenerator::visitPDefs(PDefs *pdefs) {
-  visit(pdefs->listdef_);
+  m_env->visit<void>(pdefs->listdef_, this);
+}
+
+void CodeGenerator::createVariableAllocation(Variable* var, llvm::Value* value) {
+  var->value = m_builder.CreateAlloca(convertType(*var->type));
+  if(value != nullptr) {
+    m_builder.CreateStore(value, var->value); 
+  }
 }
 
 void CodeGenerator::visitDFun(DFun *dfun) {
   auto func = m_env->lookupFunction(dfun->id_);
 
+  // Enter function scope.
+  m_env->setCurrentScope(func->scope);
+
   // Construct argument types list.
   std::vector<llvm::Type*> argumentTypes;
-  for(auto argument : func->args) {
-    argumentTypes.push_back(convertType(argument.type));
+  for(auto argument : *func->args) {
+    argumentTypes.push_back(convertType(*argument->type));
   }
 
   // Create function type.
   auto func_type = llvm::FunctionType::get(
-    convertType(func->returnType),
+    convertType(*func->returnType),
     argumentTypes,
     false);
 
@@ -89,6 +87,8 @@ void CodeGenerator::visitDFun(DFun *dfun) {
     func->name, 
     m_module);
 
+  func->llvmHandle = llvm_func;
+
   // Create entry basic block.
   auto entry = llvm::BasicBlock::Create(
     m_context, 
@@ -97,45 +97,48 @@ void CodeGenerator::visitDFun(DFun *dfun) {
   m_builder.SetInsertPoint(entry);
 
   // Initialize arguments.
-  int arg_id = 0;
-  for(auto& llvm_arg : llvm_func->args()) {
-    llvm_arg.setName(func->args[arg_id].name);
+  int argumentIndex = 0;
+  for(auto& llvmFnArgument : llvm_func->args()) {
+
+    auto localFnArgument = (*func->args)[argumentIndex];
+    llvmFnArgument.setName(localFnArgument->name);
+    createVariableAllocation(localFnArgument, &llvmFnArgument);
     
-    auto value = m_builder.CreateAlloca(
-      convertType(func->args[arg_id].type)
-    );
-
-    m_builder.CreateStore(
-      &llvm_arg,
-      value
-    );
-
-    func->args[arg_id].value = value;
-    ++arg_id;
+    ++argumentIndex;
   }
 
   // Visit child nodes.
-  visit(dfun->liststm_);
+  m_env->visit<void>(dfun->liststm_, this);
+
+  // Leave function scope.
+  m_env->setCurrentScope(func->scope->getParentScope());
 }
 
 void CodeGenerator::visitADecl(ADecl *adecl) {
 }
 
 void CodeGenerator::visitSExp(SExp *sexp) {
-  std::cout << "visiting expression statement" << std::endl;
-  visit(sexp->exp_);
+  m_env->visit<void>(sexp->exp_, this);
 }
 
 void CodeGenerator::visitSDecls(SDecls *sdecls) {
+  auto names = m_env->visit<std::vector<std::string>>(sdecls->listid_, this);
+
+  for(auto const& name : *names) {
+    auto var = m_env->lookupVariable(name);
+    createVariableAllocation(var, nullptr);
+  }
 }
 
 void CodeGenerator::visitSInit(SInit *sinit) {
+  auto name = sinit->id_;
+  auto var  = m_env->lookupVariable(name);
+  createVariableAllocation(var, m_env->visit<llvm::Value>(sinit->exp_, this));
 }
 
 void CodeGenerator::visitSReturn(SReturn *sreturn) {
-  llvm::Value* retval;
-  visit(sreturn->exp_, &retval);
-  store(m_builder.CreateRet(retval));
+  auto retval = m_env->visit<llvm::Value>(sreturn->exp_, this);
+  m_env->setTemp(m_builder.CreateRet(retval));
 }
 
 void CodeGenerator::visitSReturnVoid(SReturnVoid *sreturnvoid) {
@@ -145,26 +148,26 @@ void CodeGenerator::visitSWhile(SWhile *swhile) {
 }
 
 void CodeGenerator::visitSBlock(SBlock *sblock) {
-  visit(sblock->liststm_);
+  m_env->visit<void>(sblock->liststm_, this);
 }
 
 void CodeGenerator::visitSIfElse(SIfElse *sifelse) {
 }
 
 void CodeGenerator::visitETrue(ETrue *etrue) {
-  store(llvm::ConstantInt::getTrue(m_context));
+  m_env->setTemp(llvm::ConstantInt::getTrue(m_context));
 }
 
 void CodeGenerator::visitEFalse(EFalse *efalse) {
-  store(llvm::ConstantInt::getFalse(m_context));
+  m_env->setTemp(llvm::ConstantInt::getFalse(m_context));
 }
 
 void CodeGenerator::visitEInt(EInt *eint) {
-  store(llvm::ConstantInt::get(m_context, llvm::APInt(32, eint->integer_)));
+  m_env->setTemp(llvm::ConstantInt::get(m_context, llvm::APInt(32, eint->integer_)));
 }
 
 void CodeGenerator::visitEDouble(EDouble *edouble) {
-  store(llvm::ConstantFP::get(m_context, llvm::APFloat(edouble->double_)));
+  m_env->setTemp(llvm::ConstantFP::get(m_context, llvm::APFloat(edouble->double_)));
 }
 
 void CodeGenerator::visitEString(EString *estring) {
@@ -172,147 +175,120 @@ void CodeGenerator::visitEString(EString *estring) {
 
 void CodeGenerator::visitEId(EId *eid) {
   auto var = m_env->lookupVariable(eid->id_);
-  store(m_builder.CreateLoad(var->value, var->name));
+  m_env->setTemp(var->value);
 }
 
 void CodeGenerator::visitEApp(EApp *eapp) {
   auto func = m_env->lookupFunction(eapp->id_);
+
+  auto argumentValues = m_env->visit<std::vector<llvm::Value*>>(eapp->listexp_, this);
+  m_env->setTemp(m_builder.CreateCall(func->llvmHandle, *argumentValues));  
+  delete argumentValues;
 }
 
 void CodeGenerator::visitEPIncr(EPIncr *epincr) {
-  llvm::Value* value;
-  visit(epincr->exp_, &value);
-  llvm::Value* one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
-  store(m_builder.CreateAdd(value, one));
+  auto value = m_env->visit<llvm::Value>(epincr->exp_, this);
+  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
+  m_env->setTemp(m_builder.CreateAdd(value, one));
 }
 
 void CodeGenerator::visitEPDecr(EPDecr *epdecr) {
-  llvm::Value* value;
-  visit(epdecr->exp_, &value);
-  llvm::Value* one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
-  store(m_builder.CreateSub(value, one));
+  auto value = m_env->visit<llvm::Value>(epdecr->exp_, this);
+  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
+  m_env->setTemp(m_builder.CreateSub(value, one));
 }
 
 void CodeGenerator::visitEIncr(EIncr *eincr) {
-  llvm::Value* value;
-  visit(eincr->exp_, &value);
-  llvm::Value* one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
-  store(m_builder.CreateSub(value, one));
+  auto value = m_env->visit<llvm::Value>(eincr->exp_, this);
+  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
+  m_env->setTemp(m_builder.CreateAdd(value, one));
 }
 
 void CodeGenerator::visitEDecr(EDecr *edecr) {
-  llvm::Value* value;
-  visit(edecr->exp_, &value);
-  llvm::Value* one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
-  store(m_builder.CreateFSub(value, one));
+  auto value = m_env->visit<llvm::Value>(edecr->exp_, this);
+  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
+  m_env->setTemp(m_builder.CreateSub(value, one));
 }
 
 void CodeGenerator::visitETimes(ETimes *etimes) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(etimes->exp_1, &lhs);
-  visit(etimes->exp_2, &rhs);
-  store(m_builder.CreateMul(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(etimes->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(etimes->exp_2, this);
+  m_env->setTemp(m_builder.CreateMul(lhs, rhs));
 }
 
 void CodeGenerator::visitEDiv(EDiv *ediv) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(ediv->exp_1, &lhs);
-  visit(ediv->exp_2, &rhs);
-  store(m_builder.CreateFDiv(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(ediv->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(ediv->exp_2, this);
+  m_env->setTemp(m_builder.CreateMul(lhs, rhs));
 }
 
 void CodeGenerator::visitEPlus(EPlus *eplus) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(eplus->exp_1, &lhs);
-  visit(eplus->exp_2, &rhs);
-  store(m_builder.CreateAdd(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(eplus->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(eplus->exp_2, this);
+  m_env->setTemp(m_builder.CreateAdd(lhs, rhs));
 }
 
 void CodeGenerator::visitEMinus(EMinus *eminus) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(eminus->exp_1, &lhs);
-  visit(eminus->exp_2, &rhs);
-  store(m_builder.CreateSub(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(eminus->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(eminus->exp_2, this);
+  m_env->setTemp(m_builder.CreateSub(lhs, rhs));
 }
 
 void CodeGenerator::visitELt(ELt *elt) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(elt->exp_1, &lhs);
-  visit(elt->exp_2, &rhs);
-  store(m_builder.CreateFCmpOLT(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(elt->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(elt->exp_2, this);
+  m_env->setTemp(m_builder.CreateFCmpOLT(lhs, rhs));
 }
 
 void CodeGenerator::visitEGt(EGt *egt) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(egt->exp_1, &lhs);
-  visit(egt->exp_2, &rhs);
-  store(m_builder.CreateFCmpOGT(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(egt->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(egt->exp_2, this);
+  m_env->setTemp(m_builder.CreateFCmpOGT(lhs, rhs));
 }
 
 void CodeGenerator::visitELtEq(ELtEq *elteq) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(elteq->exp_1, &lhs);
-  visit(elteq->exp_2, &rhs);
-  store(m_builder.CreateFCmpOLE(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(elteq->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(elteq->exp_2, this);
+  m_env->setTemp(m_builder.CreateFCmpOLE(lhs, rhs));
 }
 
 void CodeGenerator::visitEGtEq(EGtEq *egteq) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(egteq->exp_1, &lhs);
-  visit(egteq->exp_2, &rhs);
-  store(m_builder.CreateFCmpOLT(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(egteq->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(egteq->exp_2, this);
+  m_env->setTemp(m_builder.CreateFCmpOGE(lhs, rhs));
 }
 
 void CodeGenerator::visitEEq(EEq *eeq) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(eeq->exp_1, &lhs);
-  visit(eeq->exp_2, &rhs);
-  store(m_builder.CreateFCmpUEQ(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(eeq->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(eeq->exp_2, this);
+  m_env->setTemp(m_builder.CreateFCmpUEQ(lhs, rhs));
 }
 
 void CodeGenerator::visitENEq(ENEq *eneq) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(eneq->exp_1, &lhs);
-  visit(eneq->exp_2, &rhs);
-  store(m_builder.CreateFCmpUNE(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(eneq->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(eneq->exp_2, this);
+  m_env->setTemp(m_builder.CreateFCmpUNE(lhs, rhs));
 }
 
 void CodeGenerator::visitEAnd(EAnd *eand) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(eand->exp_1, &lhs);
-  visit(eand->exp_2, &rhs);
-  store(m_builder.CreateAnd(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(eand->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(eand->exp_2, this);
+  m_env->setTemp(m_builder.CreateAnd(lhs, rhs));
 }
 
 void CodeGenerator::visitEOr(EOr *eor) {
-  llvm::Value* lhs;
-  llvm::Value* rhs;
-  visit(eor->exp_1, &lhs);
-  visit(eor->exp_2, &rhs);
-  store(m_builder.CreateOr(lhs, rhs));
+  auto lhs = m_env->visit<llvm::Value>(eor->exp_1, this);
+  auto rhs = m_env->visit<llvm::Value>(eor->exp_2, this);
+  m_env->setTemp(m_builder.CreateOr(lhs, rhs));
 }
 
 void CodeGenerator::visitEAss(EAss *eass) {
-  std::cout << "visiting assignment" << std::endl;
-  auto var = m_env->lookupVariable(
+  auto varValue = m_env->lookupVariable(
     ((EId*)(eass->exp_1))->id_
-  );
-  std::cout << "assigning to variable " << var->name << std::endl;
+  )->value;
 
-  llvm::Value* value;
-  visit(eass->exp_2, &value);
-  store(m_builder.CreateStore(value, var->value));
+  auto assignedValue = m_env->visit<llvm::Value>(eass->exp_2, this);
+  m_env->setTemp(m_builder.CreateStore(assignedValue, varValue));
 }
 
 void CodeGenerator::visitETyped(ETyped *etyped) {
@@ -335,32 +311,31 @@ void CodeGenerator::visitType_string(Type_string *type_string) {
 
 void CodeGenerator::visitListDef(ListDef* listdef) {
   for(auto def : *listdef) {
-    visit(def);
+    m_env->visit<void>(def, this);
   }
 }
 
 void CodeGenerator::visitListArg(ListArg* listarg) {
   for(auto arg : *listarg) {
-    visit(arg);
+    m_env->visit<void>(arg, this);
   }
 }
 
 void CodeGenerator::visitListStm(ListStm* liststm) {
   for(auto stm : *liststm) {
-    visit(stm);
+    m_env->visit<void>(stm, this);
   }
 }
 
 void CodeGenerator::visitListExp(ListExp* listexp) {
+  auto expValues = new std::vector<llvm::Value*>();
   for(auto exp : *listexp) {
-    visit(exp);
+    expValues->push_back(m_env->visit<llvm::Value>(exp, this));
   }
+  m_env->setTemp(expValues);
 }
 
 void CodeGenerator::visitListId(ListId* listid) {
-  for(auto id : *listid) {
-    visitId(id);
-  }
 }
 
 void CodeGenerator::visitId(Id x) {

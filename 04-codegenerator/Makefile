@@ -6,6 +6,8 @@ GNUCCF     = -c -g -std=gnu++11
 OBJECTS    = obj/absyn.o \
 			 obj/lexer.o \
 			 obj/parser.o \
+			 obj/variable.o \
+			 obj/function.o \
 			 obj/scope.o \
 			 obj/env.o \
 			 obj/type_checker.o \
@@ -39,6 +41,12 @@ obj/lexer.o:
 
 obj/parser.o:
 	$(GNUCC) $(GNUCCF) ${BNFCDIR}/Parser.C -o $@
+
+obj/variable.o:
+	$(CLANGCC) $(CLANGCCF) variable.cc -o $@
+
+obj/function.o:
+	$(CLANGCC) $(CLANGCCF) function.cc -o $@
 
 obj/scope.o:
 	$(CLANGCC) $(CLANGCCF) scope.cc -o $@

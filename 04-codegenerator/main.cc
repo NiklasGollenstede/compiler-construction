@@ -8,6 +8,7 @@ static TypeChecker 	   g_typechecker;
 static CodeGenerator*  g_codegen;
 
 void cleanup() {
+	std::cout << std::endl << "EXITING" << std::endl;
 
 	// Cleanup input file.
 	if(g_file != nullptr) {
@@ -26,6 +27,8 @@ void cleanup() {
 		delete g_codegen;
 		g_codegen = nullptr;
 	}
+
+	exit(0);
 }
 
 // Typecheck program.

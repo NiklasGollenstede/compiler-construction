@@ -30,13 +30,16 @@ class Env {
 private:
 	// Map of functions by name.
 	// Each function name may only be used for one definition.
-	std::map<std::string, Function> m_funcs;
+	std::map<std::string, Function*> m_funcs;
 
 	// Copy of last defined function object.
-	Function m_lastFunc;
+	Function* m_lastFunc;
 
-	// List of scopes in order of their creation.
-	std::vector<Scope*> m_scopes;
+	// Global scope.
+	Scope* m_globalScope;
+
+	// Current scope.
+	Scope* m_currentScope;
 
 	// Temporary buffer.
 	void* m_temp;
@@ -52,10 +55,10 @@ public:
 	// Registers a new function.
 	// Returns true on success or false, if a function
 	// of the specified name already exists.
-	bool registerFunction(Function const& function);
+	bool registerFunction(Function* function);
 
 	// Returns the last function defined.
-	Function& getLastFunction();
+	Function* getLastFunction();
 
 	// Returns the variable declared in the tightest scope to the
 	// caller's context or nullptr if no such is defined.
@@ -64,16 +67,18 @@ public:
 	// Registers a new variable to the current scope.
 	// Returns true on success or false, if a variable definition
 	// was already supplied inside the same scope.
-	bool registerVariable(Variable const& variable);
+	bool registerVariable(Variable* variable);
 
 	// Create a new scope inside the current one.
-	void pushScope();
+	Scope* enterNestedScope();
 
 	// Pops the current scope from the stack.
 	// Returns true on success or false, if no function-
 	// or block-level scope is stored on the stack.
 	// The main scope cannot be popped.
-	bool popScope();
+	Scope* exitNestedScope();
+
+	void setCurrentScope(Scope* scope);
 
 	// Stores the specified value in the temporary buffer.
 	template<typename T>
@@ -81,33 +86,17 @@ public:
 		m_temp = (void*)temp;
 	}
 
-	// Stores the value of the temporary buffer inside the
-	// specified 'out' variable.
-	// Returns true on success or false, if temp was empty.
+	// Returns the value of temp.
 	template<typename T>
-	bool getTemp(T* out) {
-		if(m_temp == nullptr) {
-			return false;
-		} else {
-			*out = *(T*)m_temp;
-			delete (T*)m_temp;
-			setTemp<void>(nullptr);
-			return true;
-		}
+	T* getTemp() {
+		return (T*)m_temp;
 	}
 
-	// Returns value of getTemp after the node was visited.
+	// Returns the value of temp after the node was visited.
 	template<typename T>
-	void visit(Visitable* v, Visitor* vis, T* out) {
+	T* visit(Visitable* v, Visitor* vis) {
 		v->accept(vis);
-		if(!getTemp<T>(out)) {
-			crash();
-		}
-	}
-
-	// Visit a node that does not push a value to temp.
-	inline void visit(Visitable* v, Visitor* vis) {
-		v->accept(vis);
+		return getTemp<T>();
 	}
 
 	// Delete remaining scopes.
