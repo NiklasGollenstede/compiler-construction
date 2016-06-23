@@ -229,7 +229,7 @@ void TypeChecker::visitEApp(EApp *eapp)
     error(eapp, errmsg);
   }
 
-  m_env->setTemp(enum_new(func->returnType));
+  m_env->setTemp(enum_new(*func->returnType));
 }
 
 void TypeChecker::visitEPIncr(EPIncr *epincr)
@@ -279,8 +279,8 @@ Datatype TypeChecker::checkOperands(Operation op, Exp *lhs, Exp *rhs) {
     case Operation::Logic:
       if(type != Datatype::Bool) {
         error(
-          lhs, 
-          "Logical operator needs boolean operands. (Got " 
+          lhs,
+          "Logical operator needs boolean operands. (Got "
           + Datatypes::get(type) + ")"
         );
       }

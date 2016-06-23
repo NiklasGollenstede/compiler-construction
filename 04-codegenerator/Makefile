@@ -17,17 +17,17 @@ BNFCDIR    = cpp.build
 EXECUTABLE = codegen
 TESTFILE   = test.cpp
 
-$(EXECUTABLE): init $(OBJECTS) 
+$(EXECUTABLE): init $(OBJECTS)
 	$(CLANGCC) -o $@ ${OBJECTS} ${CLANGLDF}
 
 run: $(EXECUTABLE)
 	./${EXECUTABLE} ${TESTFILE}
 
 clean:
-	rm -f obj/code_generator.o obj/main.o
+	rm -f obj/type_checker.o obj/code_generator.o obj/main.o
 
 clean-all:
-	rm -r obj 
+	rm -r obj
 	rm -f ${EXECUTABLE}
 
 init:
