@@ -32,6 +32,14 @@ Scope* Scope::getParentScope() {
 	return m_parent;
 }
 
+SBlock* Scope::getBlockStatement() {
+	return m_blockStatement;
+}
+
+void Scope::setBlockStatement(SBlock* sblock) {
+	m_blockStatement = sblock;
+}
+
 Scope::~Scope() {
 	for(auto& var : m_vars) {
 		delete var.second;

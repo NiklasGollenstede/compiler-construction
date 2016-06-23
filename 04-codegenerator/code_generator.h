@@ -12,6 +12,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
 
 #include "common.h"
 #include "env.h"
@@ -33,6 +34,7 @@ public:
 	CodeGenerator(std::string const& moduleName, Env* env);
 
 	void printModule();
+	inline llvm::Module* getModule() { return m_module; }
 
 	// Auto-generated.
 	void visitProgram(Program* p);

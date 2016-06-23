@@ -39,7 +39,7 @@ void TypeChecker::visitDFun(DFun *dfun)
   // Visit function body.
   m_env->visit<void>(dfun->liststm_, this);
 
-  // Remove function scope.
+  // Leave function scope.
   m_env->exitNestedScope();
 }
 
@@ -132,7 +132,7 @@ void TypeChecker::visitSWhile(SWhile *swhile)
 }
 
 void TypeChecker::visitSBlock(SBlock *sblock) {
-  m_env->enterNestedScope();
+  m_env->enterNestedScope()->setBlockStatement(sblock);
   sblock->liststm_->accept(this);
   m_env->exitNestedScope();
 }

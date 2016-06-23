@@ -50,6 +50,15 @@ Scope* Env::exitNestedScope() {
 	} else return nullptr;
 }
 
+
+Scope* Env::getBlockScope(SBlock* sblock) {
+	for(auto child : m_currentScope->getChildScopes()) {
+		if(child->getBlockStatement() == sblock)
+			return child;
+	}
+	return nullptr;
+}
+
 Env::~Env() {
 	delete m_globalScope; // Deletes all child scopes as well.
 	m_globalScope = m_currentScope = nullptr;

@@ -56,7 +56,7 @@ void CodeGenerator::visitPDefs(PDefs *pdefs) {
 }
 
 void CodeGenerator::createVariableAllocation(Variable* var, llvm::Value* value) {
-  var->value = m_builder.CreateAlloca(convertType(*var->type));
+  var->value = m_builder.CreateAlloca(convertType(*var->type), nullptr, var->name);
   if(value != nullptr) {
     m_builder.CreateStore(value, var->value); 
   }
@@ -110,11 +110,14 @@ void CodeGenerator::visitDFun(DFun *dfun) {
   // Visit child nodes.
   m_env->visit<void>(dfun->liststm_, this);
 
+  llvm::verifyFunction(*func->llvmHandle);
+
   // Leave function scope.
   m_env->setCurrentScope(func->scope->getParentScope());
 }
 
 void CodeGenerator::visitADecl(ADecl *adecl) {
+  // Purposely ignored.
 }
 
 void CodeGenerator::visitSExp(SExp *sexp) {
@@ -142,16 +145,38 @@ void CodeGenerator::visitSReturn(SReturn *sreturn) {
 }
 
 void CodeGenerator::visitSReturnVoid(SReturnVoid *sreturnvoid) {
+  auto retval = m_builder.CreateRetVoid();
 }
 
 void CodeGenerator::visitSWhile(SWhile *swhile) {
+  auto condexpr = m_env->visit<llvm::Value>(swhile->exp_, this);
 }
 
 void CodeGenerator::visitSBlock(SBlock *sblock) {
+  m_env->setCurrentScope(m_env->getBlockScope(sblock));
   m_env->visit<void>(sblock->liststm_, this);
+  m_env->exitNestedScope();
 }
 
 void CodeGenerator::visitSIfElse(SIfElse *sifelse) {
+  auto condexpr = m_env->visit<llvm::Value>(sifelse->exp_,  this);
+
+  auto llvm_func  = m_env->getLastFunction()->llvmHandle;
+  auto trueblock  = llvm::BasicBlock::Create(m_context, "then", llvm_func);
+  auto falseblock = llvm::BasicBlock::Create(m_context, "else", llvm_func);
+  auto mergeblock = llvm::BasicBlock::Create(m_context, "join", llvm_func);
+
+  m_builder.CreateCondBr(condexpr, trueblock, falseblock);
+
+  m_builder.SetInsertPoint(trueblock);
+  m_env->visit<void>(sifelse->stm_1, this); 
+  m_builder.CreateBr(mergeblock);
+
+  m_builder.SetInsertPoint(falseblock);
+  m_env->visit<void>(sifelse->stm_2, this);
+  m_builder.CreateBr(mergeblock);
+
+  m_builder.SetInsertPoint(mergeblock);
 }
 
 void CodeGenerator::visitETrue(ETrue *etrue) {

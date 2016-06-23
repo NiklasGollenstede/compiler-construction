@@ -79,6 +79,8 @@ public:
 	Scope* exitNestedScope();
 
 	void setCurrentScope(Scope* scope);
+	
+	Scope* getBlockScope(SBlock* sblock);
 
 	// Stores the specified value in the temporary buffer.
 	template<typename T>

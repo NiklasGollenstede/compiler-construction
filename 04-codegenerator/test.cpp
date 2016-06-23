@@ -7,9 +7,14 @@ double sin(double x) {
 		+ x * x * x * x / 24.0;
 }
 
-double main(int argc, int argv) {
-	bool   debug = true;
-	int    i     = 0;
-	double pi    = 3.14159265358979323846264;
-	return sin(pi);
+void main() {
+	double x = sin(1.0);
+
+	if(x > 0.0) {
+		x = 2.0;
+	} else {
+		x = 3.0 * x;
+	}
+
+	double y = x * x;
 }

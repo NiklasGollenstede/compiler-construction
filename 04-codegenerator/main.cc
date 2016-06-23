@@ -78,6 +78,10 @@ int main(int argc, char const** argv) {
 			} else { 
 				typecheck();
 				codegen();
+
+				auto exec = llvm::ExecutionEngine::create(g_codegen->getModule());
+				auto mainHandle = exec->FindFunctionNamed("main");
+				(*exec->getPointerToFunction(mainHandle))();
 			}			
 		}
 	}
