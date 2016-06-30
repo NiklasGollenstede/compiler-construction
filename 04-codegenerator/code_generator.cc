@@ -17,32 +17,12 @@ llvm::Type* CodeGenerator::convertType(Datatype type) {
   }
 }
 
-/*
-llvm::Type* CodeGenerator::convertType(Datatype type) {
-  switch(type) {
-    case Datatype::Void: 
-      return llvm::Type::getVoidTy(m_context);
-    
-    case Datatype::Bool:
-    case Datatype::Int:
-    case Datatype::Double: 
-      return llvm::Type::getDoubleTy(m_context);
-    
-    case Datatype::String:
-      return llvm::Type::getInt8PtrTy(m_context);
-
-    default:
-      return nullptr;
-  }
-}
-*/
-
 void CodeGenerator::printModule() {
   m_module->dump();
 }
 
-void CodeGenerator::visitProgram(Program* t) { 
-  visitPDefs((PDefs *)t); 
+void CodeGenerator::visitProgram(Program* t) {
+  visitPDefs((PDefs *)t);
 }
 
 void CodeGenerator::visitDef(Def* t) {} //abstract class
@@ -58,7 +38,7 @@ void CodeGenerator::visitPDefs(PDefs *pdefs) {
 void CodeGenerator::createVariableAllocation(Variable* var, llvm::Value* value) {
   var->value = m_builder.CreateAlloca(convertType(*var->type), nullptr, var->name);
   if(value != nullptr) {
-    m_builder.CreateStore(value, var->value); 
+    m_builder.CreateStore(value, var->value);
   }
 }
 
@@ -82,17 +62,17 @@ void CodeGenerator::visitDFun(DFun *dfun) {
 
   // Create function.
   auto llvm_func = llvm::Function::Create(
-    func_type, 
-    llvm::Function::ExternalLinkage, 
-    func->name, 
+    func_type,
+    llvm::Function::ExternalLinkage,
+    func->name,
     m_module);
 
   func->llvmHandle = llvm_func;
 
   // Create entry basic block.
   auto entry = llvm::BasicBlock::Create(
-    m_context, 
-    "entry", 
+    m_context,
+    "entry",
     llvm_func);
   m_builder.SetInsertPoint(entry);
 
@@ -103,7 +83,7 @@ void CodeGenerator::visitDFun(DFun *dfun) {
     auto localFnArgument = (*func->args)[argumentIndex];
     llvmFnArgument.setName(localFnArgument->name);
     createVariableAllocation(localFnArgument, &llvmFnArgument);
-    
+
     ++argumentIndex;
   }
 
@@ -149,7 +129,20 @@ void CodeGenerator::visitSReturnVoid(SReturnVoid *sreturnvoid) {
 }
 
 void CodeGenerator::visitSWhile(SWhile *swhile) {
+  auto llvm_func  = m_env->getLastFunction()->llvmHandle;
+  auto condblock  = llvm::BasicBlock::Create(m_context, "cond", llvm_func);
+  auto loopblock  = llvm::BasicBlock::Create(m_context, "loop", llvm_func);
+  auto mergeblock = llvm::BasicBlock::Create(m_context, "join", llvm_func);
+
+  m_builder.SetInsertPoint(condblock);
   auto condexpr = m_env->visit<llvm::Value>(swhile->exp_, this);
+  m_builder.CreateCondBr(condexpr, loopblock, mergeblock);
+
+  m_builder.SetInsertPoint(loopblock);
+  m_env->visit<void>(swhile->stm_, this);
+  m_builder.CreateBr(condblock);
+
+  m_builder.SetInsertPoint(mergeblock);
 }
 
 void CodeGenerator::visitSBlock(SBlock *sblock) {
@@ -169,7 +162,7 @@ void CodeGenerator::visitSIfElse(SIfElse *sifelse) {
   m_builder.CreateCondBr(condexpr, trueblock, falseblock);
 
   m_builder.SetInsertPoint(trueblock);
-  m_env->visit<void>(sifelse->stm_1, this); 
+  m_env->visit<void>(sifelse->stm_1, this);
   m_builder.CreateBr(mergeblock);
 
   m_builder.SetInsertPoint(falseblock);
@@ -196,6 +189,7 @@ void CodeGenerator::visitEDouble(EDouble *edouble) {
 }
 
 void CodeGenerator::visitEString(EString *estring) {
+  // TODO: throw?
 }
 
 void CodeGenerator::visitEId(EId *eid) {
@@ -207,7 +201,7 @@ void CodeGenerator::visitEApp(EApp *eapp) {
   auto func = m_env->lookupFunction(eapp->id_);
 
   auto argumentValues = m_env->visit<std::vector<llvm::Value*>>(eapp->listexp_, this);
-  m_env->setTemp(m_builder.CreateCall(func->llvmHandle, *argumentValues));  
+  m_env->setTemp(m_builder.CreateCall(func->llvmHandle, *argumentValues));
   delete argumentValues;
 }
 

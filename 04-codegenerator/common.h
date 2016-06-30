@@ -14,6 +14,7 @@
 #define ASSERT_NULL(ptr)     assert((ptr) == nullptr)
 #define ASSERT_NOT_NULL(ptr) assert((ptr) != nullptr)
 #define EXCEPT(message)      throw std::runtime_error((message))
+#define PRINT(message)       std::cout << message << std::endl;
 
 // Create an instance of enum E on the heap.
 template<typename E>

@@ -53,7 +53,7 @@ void codegen() {
 		std::cout << "OK" << std::endl;
 		std::cout << "BITCODE BELOW" << std::endl << std::endl;
 		g_codegen->printModule();
-		
+
 	} catch(std::exception const& e) {
 		std::cerr << "CODEGEN ERROR" << std::endl;
 		std::cerr << e.what() << std::endl;
@@ -62,27 +62,27 @@ void codegen() {
 }
 
 int main(int argc, char const** argv) {
-	
+
 	// Wrong usage.
 	if(argc != 2) {
 		std::cerr << "Usage: tccpp source.cpp" << std::endl;
-	} 
+	}
 
 	// Open specified input file.
 	else {
 		if((g_file = fopen(argv[1], "r")) == nullptr) {
 			std::cerr << "FILE NOT FOUND" << std::endl;
 		} else {
-			if((g_program = pProgram(g_file)) == nullptr) { 
+			if((g_program = pProgram(g_file)) == nullptr) {
 				std::cerr << "SYNTAX ERROR" << std::endl;
-			} else { 
+			} else {
 				typecheck();
 				codegen();
 
-				auto exec = llvm::ExecutionEngine::create(g_codegen->getModule());
-				auto mainHandle = exec->FindFunctionNamed("main");
-				(*exec->getPointerToFunction(mainHandle))();
-			}			
+				// auto exec = llvm::ExecutionEngine::create(g_codegen->getModule());
+				// auto mainHandle = exec->FindFunctionNamed("main");
+				// (*exec->getPointerToFunction(mainHandle))();
+			}
 		}
 	}
 
