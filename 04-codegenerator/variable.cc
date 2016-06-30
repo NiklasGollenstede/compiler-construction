@@ -10,6 +10,6 @@ Variable::Variable(
 }
 
  Variable::~Variable() {
- 	delete type; type = nullptr;
- 	delete value; value = nullptr;
+ 	if(type)  delete type;  type  = nullptr;
+ 	// Value ptr managed by LLVM.
  }

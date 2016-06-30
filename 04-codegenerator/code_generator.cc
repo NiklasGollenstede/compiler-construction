@@ -115,7 +115,7 @@ void CodeGenerator::visitSExp(SExp *sexp) {
 void CodeGenerator::visitSDecls(SDecls *sdecls) {
   std::cout << "visitSDecls(";
   auto names = m_env->visit<std::vector<std::string>>(sdecls->listid_, this);
-  for(auto const& name : *names) { std::cout << name << ", "; }
+  for(auto const& name : *names) { std::cout << name << ((name == names->back()) ? "" : ", "); }
   std::cout << ")" << std::endl;
 
   for(auto const& name : *names) {
