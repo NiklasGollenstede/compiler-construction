@@ -100,8 +100,13 @@ void CodeGenerator::visitDFun(DFun *dfun) {
 
   // Visit child nodes.
   m_env->visit<void>(dfun->liststm_, this);
-  if (*(func->returnType) == Datatype::Void) {
-    m_builder.CreateRetVoid();
+
+  switch (*func->returnType) {
+    case Datatype::Void:   m_builder.CreateRetVoid(); break;
+    case Datatype::Int:    m_builder.CreateRet(llvm::ConstantInt::get(m_context, llvm::APInt(32, 0))); break;
+    case Datatype::Double: m_builder.CreateRet(llvm::ConstantFP::get(m_context, llvm::APFloat(0.0))); break;
+    case Datatype::Bool:   m_builder.CreateRet(llvm::ConstantInt::getFalse(m_context)); break;
+    default: error("FUCK");
   }
 
   llvm::verifyFunction(*func->llvmHandle);
@@ -266,7 +271,11 @@ void CodeGenerator::visitETimes(ETimes *etimes) {
 void CodeGenerator::visitEDiv(EDiv *ediv) {
   auto lhs = m_env->visit<llvm::Value>(ediv->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(ediv->exp_2, this);
-  m_env->setTemp(m_builder.CreateFDiv(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateSDiv(lhs, rhs)
+    : m_builder.CreateFDiv(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitEPlus(EPlus *eplus) {

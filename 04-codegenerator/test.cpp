@@ -24,6 +24,28 @@ double ifElse() {
 	return x;
 }
 
+bool calcInt() {
+	int i;
+	int j = 42;
+	i = 2;
+	j = i + j;
+	i = j * i;
+	j = i / j;
+	i = j - i;
+	return i == j && i != j || i < j && j <= i || j > i && j >= i;
+}
+
+bool calcDouble() {
+	double i;
+	double j = 42.0;
+	i = 2.0;
+	j = i + j;
+	i = j * i;
+	j = i / j;
+	i = j - i;
+	return i == j && i != j || i < j && j <= i || j > i && j >= i;
+}
+
 int loop() {
 	int i = 0;
 
@@ -44,8 +66,16 @@ void callMany() {
 	manyArgs(1, 2, 3, 4, 5);
 }
 
-int main()
-{
+int checkDouble() {
+	double d = 1.0;
+	double d2 = 2.5;
+	if (d - d2 / 2.0 > 0.0)
+		return 0;
+	else
+		return 1;
+}
+
+int main() {
 	callMany();
-	return 0;
+	return checkDouble();
 }

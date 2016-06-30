@@ -62,11 +62,20 @@ void codegen(std::string path) {
 	}
 }
 
+bool replace(std::string& str, const std::string& from, const std::string& to) {
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
+
 int main(int argc, char const** argv) {
 
 	// Wrong usage.
-	if(argc != 3) {
-		std::cerr << "Usage: tccpp source.cpp output.ll" << std::endl;
+	if(argc != 2) {
+		std::cerr << "Usage: ccpp source.cpp" << std::endl;
 	}
 
 	// Open specified input file.
@@ -77,12 +86,10 @@ int main(int argc, char const** argv) {
 			if((g_program = pProgram(g_file)) == nullptr) {
 				std::cerr << "SYNTAX ERROR" << std::endl;
 			} else {
+				std::string infile(argv[1]);
 				typecheck();
-				codegen(argv[2]);
-
-				// auto exec = llvm::ExecutionEngine::create(g_codegen->getModule());
-				// auto mainHandle = exec->FindFunctionNamed("main");
-				// (*exec->getPointerToFunction(mainHandle))();
+				replace(infile, ".cpp", ".ll");
+				codegen(infile);
 			}
 		}
 	}
