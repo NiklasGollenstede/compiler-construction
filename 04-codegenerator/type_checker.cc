@@ -67,8 +67,10 @@ void TypeChecker::visitSDecls(SDecls *sdecls)
 
   auto names = m_env->visit<std::vector<std::string>>(sdecls->listid_, this);
   for(auto name : *names) {
-    if(!m_env->registerVariable(new Variable(type, name, nullptr))) {
+    if(m_env->lookupVariable(name) != nullptr) {
       error(sdecls, "Redefined variable " + name + ".");
+    } else {
+      m_env->registerVariable(new Variable(type, name, nullptr));
     }
   }
   delete names;
@@ -89,15 +91,15 @@ void TypeChecker::visitSInit(SInit *sinit)
 
   auto name = sinit->id_;
 
-  if(!m_env->registerVariable(new Variable(varType, name, nullptr))){
+  if(m_env->lookupVariable(name) != nullptr) {
     error(sinit, "Redefined variable " + name + ".");
+  } else {
+    m_env->registerVariable(new Variable(varType, name, nullptr));
   }
 }
 
 void TypeChecker::visitSReturn(SReturn *sreturn)
 {
-  std::cout << "VISITING SRETURN" << std::endl;
-
   auto exprType = m_env->visit<Datatype>(sreturn->exp_, this);
 
   if(*exprType != *m_env->getLastFunction()->returnType) {
@@ -185,8 +187,6 @@ void TypeChecker::visitEId(EId *eid)
 
 void TypeChecker::visitEApp(EApp *eapp)
 {
-  std::cout << "VISITING EAPP" << std::endl;
-
   auto name = eapp->id_;
   visitId(eapp->id_);
 
@@ -257,8 +257,6 @@ void TypeChecker::visitEDecr(EDecr *edecr)
 }
 
 Datatype TypeChecker::checkOperands(Operation op, Exp *lhs, Exp *rhs) {
-  std::cout << "CHECK OPERANDS" << std::endl;
-
   auto lhs_type = m_env->visit<Datatype>(lhs, this);
   auto rhs_type = m_env->visit<Datatype>(rhs, this);
 

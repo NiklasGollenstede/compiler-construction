@@ -18,9 +18,13 @@ Variable* Scope::lookupVariable(std::string const& name) {
 
 bool Scope::registerVariable(Variable* variable) {
 	if(m_vars.count(variable->name) == 0) {
+		std::cout << "Registered variable " << variable->name << " in scope " << this << "." << std::endl;
 		m_vars[variable->name] = variable;
 		return true;
-	} else return false;
+	} else {
+		std::cout << "Variable " << variable->name << " already exists in scope." << std::endl;
+		return false;
+	}
 }
 
 Scope* Scope::createChildScope() {

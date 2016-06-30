@@ -18,7 +18,6 @@ bool Env::registerFunction(Function* function) {
 	if(lookupFunction(function->name) == nullptr) {
 		m_funcs[function->name] = function;
 		m_lastFunc = function;
-		for(auto arg : *function->args) { m_currentScope->registerVariable(arg); }
 		return true;
 	} else return false;
 }

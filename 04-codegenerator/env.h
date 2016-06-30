@@ -78,6 +78,8 @@ public:
 	// The main scope cannot be popped.
 	Scope* exitNestedScope();
 
+	Scope* getCurrentScope() { return m_currentScope; }
+	
 	void setCurrentScope(Scope* scope);
 	
 	Scope* getBlockScope(SBlock* sblock);

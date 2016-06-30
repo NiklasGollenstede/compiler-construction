@@ -8,6 +8,7 @@ double sin(double x) {
 }
 
 double ifElse() {
+	double z;
 	double x = sin(1.0);
 
 	if(x > 0.0) {
@@ -17,7 +18,7 @@ double ifElse() {
 		y = 2.0 / x;
 	} else {
 		x = 3.0;
-		double y = x - 1.0;
+		double m;
 	}
 
 	return x;

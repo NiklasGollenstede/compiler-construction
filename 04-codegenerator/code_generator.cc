@@ -43,6 +43,7 @@ void CodeGenerator::visitPDefs(PDefs *pdefs) {
 }
 
 void CodeGenerator::createVariableAllocation(Variable* var, llvm::Value* value) {
+  std::cout << "Creating variable allocation for var ptr: " << var << std::endl;
   var->value = m_builder.CreateAlloca(convertType(*var->type), nullptr, var->name);
   if(value != nullptr) {
     m_builder.CreateStore(value, var->value);
@@ -112,15 +113,21 @@ void CodeGenerator::visitSExp(SExp *sexp) {
 }
 
 void CodeGenerator::visitSDecls(SDecls *sdecls) {
+  std::cout << "visitSDecls(";
   auto names = m_env->visit<std::vector<std::string>>(sdecls->listid_, this);
+  for(auto const& name : *names) { std::cout << name << ", "; }
+  std::cout << ")" << std::endl;
 
   for(auto const& name : *names) {
     auto var = m_env->lookupVariable(name);
     createVariableAllocation(var, nullptr);
   }
+
+  delete names;
 }
 
 void CodeGenerator::visitSInit(SInit *sinit) {
+  std::cout << "visitSInit(" << sinit->id_ << ")" << std::endl;
   auto name = sinit->id_;
   auto var  = m_env->lookupVariable(name);
   createVariableAllocation(var, m_env->visit<llvm::Value>(sinit->exp_, this));
@@ -159,7 +166,6 @@ void CodeGenerator::visitSBlock(SBlock *sblock) {
 }
 
 void CodeGenerator::visitSIfElse(SIfElse *sifelse) {
-  PRINT("SIfElse")
   auto condexpr = m_env->visit<llvm::Value>(sifelse->exp_, this);
 
   auto llvm_func  = m_env->getLastFunction()->llvmHandle;
@@ -203,6 +209,7 @@ void CodeGenerator::visitEString(EString *estring) {
 }
 
 void CodeGenerator::visitEId(EId *eid) {
+  std::cout << "visitEId(" << eid->id_ << ") in scope " << m_env->getCurrentScope() << std::endl;
   auto var = m_env->lookupVariable(eid->id_);
   m_env->setTemp(m_builder.CreateLoad(var->value, var->name));
 }
@@ -365,6 +372,11 @@ void CodeGenerator::visitListExp(ListExp* listexp) {
 }
 
 void CodeGenerator::visitListId(ListId* listid) {
+  auto idValues = new std::vector<std::string>();
+  for(auto id : *listid) {
+    idValues->push_back(id);
+  }
+  m_env->setTemp(idValues);
 }
 
 void CodeGenerator::visitId(Id x) {
