@@ -1,4 +1,5 @@
 #include "code_generator.h"
+// #include <llvm/Bitcode/BitcodeWriter.h>
 
 CodeGenerator::CodeGenerator(std::string const& moduleName, Env* env)
   :m_env(env),
@@ -19,6 +20,12 @@ llvm::Type* CodeGenerator::convertType(Datatype type) {
 
 void CodeGenerator::printModule() {
   m_module->dump();
+}
+
+void CodeGenerator::saveToFile(std::string path) {
+  std::error_code err;
+  llvm::raw_fd_ostream file(path, err, llvm::sys::fs::OpenFlags::F_Text);
+  m_module->print(file, nullptr);
 }
 
 void CodeGenerator::visitProgram(Program* t) {
@@ -152,7 +159,8 @@ void CodeGenerator::visitSBlock(SBlock *sblock) {
 }
 
 void CodeGenerator::visitSIfElse(SIfElse *sifelse) {
-  auto condexpr = m_env->visit<llvm::Value>(sifelse->exp_,  this);
+  PRINT("SIfElse")
+  auto condexpr = m_env->visit<llvm::Value>(sifelse->exp_, this);
 
   auto llvm_func  = m_env->getLastFunction()->llvmHandle;
   auto trueblock  = llvm::BasicBlock::Create(m_context, "then", llvm_func);
@@ -164,10 +172,12 @@ void CodeGenerator::visitSIfElse(SIfElse *sifelse) {
   m_builder.SetInsertPoint(trueblock);
   m_env->visit<void>(sifelse->stm_1, this);
   m_builder.CreateBr(mergeblock);
+  // trueblock = m_builder.GetInsertPoint();
 
   m_builder.SetInsertPoint(falseblock);
   m_env->visit<void>(sifelse->stm_2, this);
   m_builder.CreateBr(mergeblock);
+  // falseblock = m_builder.GetInsertPoint();
 
   m_builder.SetInsertPoint(mergeblock);
 }
@@ -194,7 +204,7 @@ void CodeGenerator::visitEString(EString *estring) {
 
 void CodeGenerator::visitEId(EId *eid) {
   auto var = m_env->lookupVariable(eid->id_);
-  m_env->setTemp(var->value);
+  m_env->setTemp(m_builder.CreateLoad(var->value, var->name));
 }
 
 void CodeGenerator::visitEApp(EApp *eapp) {
@@ -207,50 +217,50 @@ void CodeGenerator::visitEApp(EApp *eapp) {
 
 void CodeGenerator::visitEPIncr(EPIncr *epincr) {
   auto value = m_env->visit<llvm::Value>(epincr->exp_, this);
-  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
+  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(32, 1));
   m_env->setTemp(m_builder.CreateAdd(value, one));
 }
 
 void CodeGenerator::visitEPDecr(EPDecr *epdecr) {
   auto value = m_env->visit<llvm::Value>(epdecr->exp_, this);
-  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
+  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(32, 1));
   m_env->setTemp(m_builder.CreateSub(value, one));
 }
 
 void CodeGenerator::visitEIncr(EIncr *eincr) {
   auto value = m_env->visit<llvm::Value>(eincr->exp_, this);
-  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
+  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(32, 1));
   m_env->setTemp(m_builder.CreateAdd(value, one));
 }
 
 void CodeGenerator::visitEDecr(EDecr *edecr) {
   auto value = m_env->visit<llvm::Value>(edecr->exp_, this);
-  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(1, 32));
+  auto one = llvm::ConstantInt::get(m_context, llvm::APInt(32, 1));
   m_env->setTemp(m_builder.CreateSub(value, one));
 }
 
 void CodeGenerator::visitETimes(ETimes *etimes) {
   auto lhs = m_env->visit<llvm::Value>(etimes->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(etimes->exp_2, this);
-  m_env->setTemp(m_builder.CreateMul(lhs, rhs));
+  m_env->setTemp(m_builder.CreateFMul(lhs, rhs));
 }
 
 void CodeGenerator::visitEDiv(EDiv *ediv) {
   auto lhs = m_env->visit<llvm::Value>(ediv->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(ediv->exp_2, this);
-  m_env->setTemp(m_builder.CreateMul(lhs, rhs));
+  m_env->setTemp(m_builder.CreateFDiv(lhs, rhs));
 }
 
 void CodeGenerator::visitEPlus(EPlus *eplus) {
   auto lhs = m_env->visit<llvm::Value>(eplus->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(eplus->exp_2, this);
-  m_env->setTemp(m_builder.CreateAdd(lhs, rhs));
+  m_env->setTemp(m_builder.CreateFAdd(lhs, rhs));
 }
 
 void CodeGenerator::visitEMinus(EMinus *eminus) {
   auto lhs = m_env->visit<llvm::Value>(eminus->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(eminus->exp_2, this);
-  m_env->setTemp(m_builder.CreateSub(lhs, rhs));
+  m_env->setTemp(m_builder.CreateFSub(lhs, rhs));
 }
 
 void CodeGenerator::visitELt(ELt *elt) {

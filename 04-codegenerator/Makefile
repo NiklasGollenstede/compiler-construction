@@ -16,12 +16,13 @@ OBJECTS    = obj/absyn.o \
 BNFCDIR    = cpp.build
 EXECUTABLE = codegen
 TESTFILE   = test.cpp
+TESTOUTPUT = test.ll
 
 $(EXECUTABLE): init $(OBJECTS)
 	$(CLANGCC) -o $@ ${OBJECTS} ${CLANGLDF}
 
 run: $(EXECUTABLE)
-	./${EXECUTABLE} ${TESTFILE}
+	./${EXECUTABLE} ${TESTFILE} ${TESTOUTPUT}
 
 clean:
 	rm -f obj/type_checker.o obj/code_generator.o obj/main.o

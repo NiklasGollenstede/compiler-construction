@@ -11,9 +11,13 @@ double ifElse() {
 	double x = sin(1.0);
 
 	if(x > 0.0) {
-		x = 2.0;
+		double y;
+		x = x + 5.0;
+		x = x - 2.0;
+		y = 2.0 / x;
 	} else {
 		x = 3.0;
+		double y = x - 1.0;
 	}
 
 	return x;

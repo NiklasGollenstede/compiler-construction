@@ -45,7 +45,7 @@ void typecheck() {
 }
 
 // Generate LLVM bitcode.
-void codegen() {
+void codegen(std::string path) {
 	try {
 		std::cout << "GENERATING CODE" << std::endl;
 		g_codegen = new CodeGenerator("test", g_typechecker.getEnv());
@@ -53,6 +53,7 @@ void codegen() {
 		std::cout << "OK" << std::endl;
 		std::cout << "BITCODE BELOW" << std::endl << std::endl;
 		g_codegen->printModule();
+		g_codegen->saveToFile(path);
 
 	} catch(std::exception const& e) {
 		std::cerr << "CODEGEN ERROR" << std::endl;
@@ -64,8 +65,8 @@ void codegen() {
 int main(int argc, char const** argv) {
 
 	// Wrong usage.
-	if(argc != 2) {
-		std::cerr << "Usage: tccpp source.cpp" << std::endl;
+	if(argc != 3) {
+		std::cerr << "Usage: tccpp source.cpp output.ll" << std::endl;
 	}
 
 	// Open specified input file.
@@ -77,7 +78,7 @@ int main(int argc, char const** argv) {
 				std::cerr << "SYNTAX ERROR" << std::endl;
 			} else {
 				typecheck();
-				codegen();
+				codegen(argv[2]);
 
 				// auto exec = llvm::ExecutionEngine::create(g_codegen->getModule());
 				// auto mainHandle = exec->FindFunctionNamed("main");

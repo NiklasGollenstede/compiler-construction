@@ -35,6 +35,7 @@ public:
 
 	void printModule();
 	inline llvm::Module* getModule() { return m_module; }
+	void saveToFile(std::string path);
 
 	// Auto-generated.
 	void visitProgram(Program* p);
