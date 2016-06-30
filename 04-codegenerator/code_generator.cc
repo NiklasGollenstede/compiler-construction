@@ -1,6 +1,8 @@
 #include "code_generator.h"
 // #include <llvm/Bitcode/BitcodeWriter.h>
 
+#define HAS_TYPE_INT(x) ((x)->getType() == convertType(Datatype::Int))
+
 CodeGenerator::CodeGenerator(std::string const& moduleName, Env* env)
   :m_env(env),
    m_builder(m_context),
@@ -98,6 +100,9 @@ void CodeGenerator::visitDFun(DFun *dfun) {
 
   // Visit child nodes.
   m_env->visit<void>(dfun->liststm_, this);
+  if (*(func->returnType) == Datatype::Void) {
+    m_builder.CreateRetVoid();
+  }
 
   llvm::verifyFunction(*func->llvmHandle);
 
@@ -149,6 +154,7 @@ void CodeGenerator::visitSWhile(SWhile *swhile) {
   auto loopblock  = llvm::BasicBlock::Create(m_context, "loop", llvm_func);
   auto mergeblock = llvm::BasicBlock::Create(m_context, "join", llvm_func);
 
+  m_builder.CreateBr(condblock);
   m_builder.SetInsertPoint(condblock);
   auto condexpr = m_env->visit<llvm::Value>(swhile->exp_, this);
   m_builder.CreateCondBr(condexpr, loopblock, mergeblock);
@@ -250,7 +256,11 @@ void CodeGenerator::visitEDecr(EDecr *edecr) {
 void CodeGenerator::visitETimes(ETimes *etimes) {
   auto lhs = m_env->visit<llvm::Value>(etimes->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(etimes->exp_2, this);
-  m_env->setTemp(m_builder.CreateFMul(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateMul(lhs, rhs)
+    : m_builder.CreateFMul(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitEDiv(EDiv *ediv) {
@@ -262,49 +272,81 @@ void CodeGenerator::visitEDiv(EDiv *ediv) {
 void CodeGenerator::visitEPlus(EPlus *eplus) {
   auto lhs = m_env->visit<llvm::Value>(eplus->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(eplus->exp_2, this);
-  m_env->setTemp(m_builder.CreateFAdd(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateAdd(lhs, rhs)
+    : m_builder.CreateFAdd(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitEMinus(EMinus *eminus) {
   auto lhs = m_env->visit<llvm::Value>(eminus->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(eminus->exp_2, this);
-  m_env->setTemp(m_builder.CreateFSub(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateSub(lhs, rhs)
+    : m_builder.CreateFSub(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitELt(ELt *elt) {
   auto lhs = m_env->visit<llvm::Value>(elt->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(elt->exp_2, this);
-  m_env->setTemp(m_builder.CreateFCmpOLT(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateICmpULT(lhs, rhs)
+    : m_builder.CreateFCmpOLT(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitEGt(EGt *egt) {
   auto lhs = m_env->visit<llvm::Value>(egt->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(egt->exp_2, this);
-  m_env->setTemp(m_builder.CreateFCmpOGT(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateICmpUGT(lhs, rhs)
+    : m_builder.CreateFCmpOGT(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitELtEq(ELtEq *elteq) {
   auto lhs = m_env->visit<llvm::Value>(elteq->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(elteq->exp_2, this);
-  m_env->setTemp(m_builder.CreateFCmpOLE(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateICmpULE(lhs, rhs)
+    : m_builder.CreateFCmpOLE(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitEGtEq(EGtEq *egteq) {
   auto lhs = m_env->visit<llvm::Value>(egteq->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(egteq->exp_2, this);
-  m_env->setTemp(m_builder.CreateFCmpOGE(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateICmpUGE(lhs, rhs)
+    : m_builder.CreateFCmpOGE(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitEEq(EEq *eeq) {
   auto lhs = m_env->visit<llvm::Value>(eeq->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(eeq->exp_2, this);
-  m_env->setTemp(m_builder.CreateFCmpUEQ(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateICmpEQ(lhs, rhs)
+    : m_builder.CreateFCmpUEQ(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitENEq(ENEq *eneq) {
   auto lhs = m_env->visit<llvm::Value>(eneq->exp_1, this);
   auto rhs = m_env->visit<llvm::Value>(eneq->exp_2, this);
-  m_env->setTemp(m_builder.CreateFCmpUNE(lhs, rhs));
+  m_env->setTemp(
+    HAS_TYPE_INT(lhs)
+    ? m_builder.CreateICmpNE(lhs, rhs)
+    : m_builder.CreateFCmpUNE(lhs, rhs)
+  );
 }
 
 void CodeGenerator::visitEAnd(EAnd *eand) {

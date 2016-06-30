@@ -43,3 +43,9 @@ int manyArgs(int a, int b, int c, int d, int e) {
 void callMany() {
 	manyArgs(1, 2, 3, 4, 5);
 }
+
+int main()
+{
+	callMany();
+	return 0;
+}
