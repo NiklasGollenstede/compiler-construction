@@ -36,11 +36,6 @@ int loop() {
 	return i;
 }
 
-bool boolFunc() {
-	bool b = true;
-	return b;
-}
-
 int manyArgs(int a, int b, int c, int d, int e) {
 	return 0;
 }

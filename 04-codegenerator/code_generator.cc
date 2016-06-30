@@ -52,6 +52,7 @@ void CodeGenerator::createVariableAllocation(Variable* var, llvm::Value* value) 
 
 void CodeGenerator::visitDFun(DFun *dfun) {
   auto func = m_env->lookupFunction(dfun->id_);
+  m_env->setLastFunction(func);
 
   // Enter function scope.
   m_env->setCurrentScope(func->scope);

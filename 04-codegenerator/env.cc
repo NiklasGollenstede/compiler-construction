@@ -26,6 +26,10 @@ Function* Env::getLastFunction() {
 	return m_lastFunc;
 }
 
+void Env::setLastFunction(Function* function) {
+	m_lastFunc = function;
+}
+
 Variable* Env::lookupVariable(std::string const& name) {
 	// Search scopes, starting with innermost.
 	return m_currentScope->lookupVariable(name);

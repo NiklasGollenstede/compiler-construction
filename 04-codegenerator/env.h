@@ -60,6 +60,8 @@ public:
 	// Returns the last function defined.
 	Function* getLastFunction();
 
+	void setLastFunction(Function* function);
+
 	// Returns the variable declared in the tightest scope to the
 	// caller's context or nullptr if no such is defined.
 	Variable* lookupVariable(std::string const& name);
@@ -79,7 +81,7 @@ public:
 	Scope* exitNestedScope();
 
 	Scope* getCurrentScope() { return m_currentScope; }
-	
+
 	void setCurrentScope(Scope* scope);
 	
 	Scope* getBlockScope(SBlock* sblock);
